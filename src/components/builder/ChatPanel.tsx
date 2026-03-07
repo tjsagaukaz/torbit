@@ -24,6 +24,7 @@ import type { Message, AgentId } from './chat/types'
 import { ChatHistorySkeleton } from '@/components/ui/skeletons'
 import { useStreamChat } from './chat/useStreamChat'
 import { useSupervisor } from './chat/useSupervisor'
+import { getInitialAssistantMessage } from './chat/initialResponse'
 import type { RunDiagnosticsState } from './chat/useStreamChat'
 import type { RunStatus } from './chat/ExecutionStatusRail'
 
@@ -181,19 +182,6 @@ export default function ChatPanel() {
     files,
   })
 
-  const generateGreeting = useCallback((promptText: string): string => {
-    const promptLower = promptText.toLowerCase()
-    const isIteration = promptLower.includes('add ') ||
-                        promptLower.includes('change ') ||
-                        promptLower.includes('update ') ||
-                        promptLower.includes('fix ') ||
-                        promptLower.includes('make it ') ||
-                        promptLower.includes('modify ') ||
-                        promptLower.includes('remove ')
-    if (isIteration) return ''
-    return ''
-  }, [])
-
   const compileHighQualityBrief = useCallback((promptText: string): string => {
     const basePrompt = promptText.trim()
     if (!basePrompt) return promptText
@@ -243,7 +231,7 @@ export default function ChatPanel() {
       const errorType = errorMatch?.[1] || 'issue'
       initialContent = `Detected: ${errorType.toLowerCase().replace(/_/g, ' ')}. Patching...`
     } else {
-      initialContent = generateGreeting(messageContent)
+      initialContent = getInitialAssistantMessage(messageContent)
     }
 
     setMessages(prev => [...prev, {
@@ -406,7 +394,7 @@ export default function ChatPanel() {
       setCurrentTask(null)
       if (!requestFailed) generationSound.onComplete()
     }
-  }, [buildFileManifest, capabilities, compileHighQualityBrief, generateGreeting, generationSound, intentMode, isLoading, messages, parseSSEStream, projectId, projectType, prompt, setAgentStatus, setIsGenerating, supervisor])
+  }, [buildFileManifest, capabilities, compileHighQualityBrief, generationSound, intentMode, isLoading, messages, parseSSEStream, projectId, projectType, prompt, setAgentStatus, setIsGenerating, supervisor])
 
   // Keep the ref in sync so useSupervisor can call handleSubmitMessage
   handleSubmitMessageRef.current = handleSubmitMessage
