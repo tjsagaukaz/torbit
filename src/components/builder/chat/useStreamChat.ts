@@ -3,6 +3,7 @@ import { useBuilderStore } from '@/store/builder'
 import { useGovernanceStore } from '@/store/governance'
 import { ExecutorService } from '@/services/executor'
 import { error as logError } from '@/lib/observability/logger.client'
+import { getToolCallLabel } from './activityCopy'
 import type { Message, ToolCall, StreamChunk, AgentId } from './types'
 import type { RunStatus } from './ExecutionStatusRail'
 
@@ -202,7 +203,7 @@ export function useStreamChat(deps: StreamChatDeps) {
 
     const buildFallbackSummary = (calls: ToolCall[]): string => {
       if (calls.length === 0) {
-        return 'Request completed, but no response text was returned. Please retry for a detailed explanation.'
+        return 'I finished the request, but I did not get a written summary back. Please retry if you want a fuller explanation.'
       }
 
       const mutationCalls = calls.filter((tc) => (
@@ -213,7 +214,7 @@ export function useStreamChat(deps: StreamChatDeps) {
       ))
 
       if (mutationCalls.length === 0) {
-        return `Completed ${calls.length} tool step${calls.length === 1 ? '' : 's'}. Review the action log for details.`
+        return `I finished ${calls.length} build step${calls.length === 1 ? '' : 's'}. Review the activity log for the exact steps.`
       }
 
       const paths = Array.from(new Set(
@@ -223,21 +224,21 @@ export function useStreamChat(deps: StreamChatDeps) {
       ))
 
       if (paths.length === 0) {
-        return `Applied ${mutationCalls.length} file change${mutationCalls.length === 1 ? '' : 's'}.`
+        return `I made ${mutationCalls.length} file change${mutationCalls.length === 1 ? '' : 's'}.`
       }
 
       const preview = paths.slice(0, 3).join(', ')
       const suffix = paths.length > 3 ? ` and ${paths.length - 3} more` : ''
-      return `Applied ${mutationCalls.length} file change${mutationCalls.length === 1 ? '' : 's'}: ${preview}${suffix}.`
+      return `I updated ${mutationCalls.length} file${mutationCalls.length === 1 ? '' : 's'}: ${preview}${suffix}.`
     }
 
     const getTaskName = (toolName: string, args: Record<string, unknown>): string => {
-      if (toolName === 'createFile' && args.path) {
-        return (args.path as string).split('/').pop() || 'file'
-      }
-      if (toolName === 'think') return 'Working'
-      if (toolName === 'verifyDependencyGraph') return 'Checking dependencies'
-      return toolName.replace(/([A-Z])/g, ' $1').trim()
+      return getToolCallLabel({
+        id: 'preview-task',
+        name: toolName,
+        args,
+        status: 'running',
+      })
     }
 
     while (true) {

@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import type { ToolCall } from './types'
+import { getToolCallLabel } from './activityCopy'
 
 // ============================================================================
 // ACTION LOG - Minimal connected-line timeline (v0-style)
@@ -31,67 +32,62 @@ interface ActionMeta {
  * Parse action metadata from tool call
  */
 function getActionMeta(toolCall: ToolCall): ActionMeta {
-  const args = toolCall.args || {}
-  const path = (args.path || args.filePath || '') as string
-  const fileName = path.split('/').pop() || ''
-  
   switch (toolCall.name) {
     case 'think':
       return {
         icon: <Sparkles className="w-3.5 h-3.5" />,
-        label: `Reasoned for ${args.duration || '0'}s`,
+        label: getToolCallLabel(toolCall),
       }
     case 'createFile':
       return {
         icon: <FilePlus2 className="w-3.5 h-3.5" />,
-        label: `Created ${fileName}`,
+        label: getToolCallLabel(toolCall),
       }
     case 'editFile':
     case 'replaceInFile':
+    case 'applyPatch':
       return {
         icon: <FileEdit className="w-3.5 h-3.5" />,
-        label: `Edited ${fileName}`,
+        label: getToolCallLabel(toolCall),
       }
     case 'readFile':
       return {
         icon: <Eye className="w-3.5 h-3.5" />,
-        label: `Read ${fileName}`,
+        label: getToolCallLabel(toolCall),
       }
     case 'deleteFile':
       return {
         icon: <Trash2 className="w-3.5 h-3.5" />,
-        label: `Deleted ${fileName}`,
+        label: getToolCallLabel(toolCall),
       }
     case 'runCommand':
-    case 'executeCommand': {
-      const cmd = (args.command as string)?.slice(0, 40) || 'command'
+    case 'executeCommand':
       return {
         icon: <Terminal className="w-3.5 h-3.5" />,
-        label: `Ran ${cmd}${cmd.length >= 40 ? '...' : ''}`,
+        label: getToolCallLabel(toolCall),
       }
-    }
     case 'installPackage':
     case 'installDependency':
       return {
         icon: <Package className="w-3.5 h-3.5" />,
-        label: `Installed ${(args.package || args.packages || args.name || '') as string}`,
+        label: getToolCallLabel(toolCall),
       }
     case 'searchFiles':
     case 'findInFiles':
       return {
         icon: <Search className="w-3.5 h-3.5" />,
-        label: `Searched ${(args.query || args.pattern || '') as string}`,
+        label: getToolCallLabel(toolCall),
       }
     case 'listFiles':
     case 'listDirectory':
       return {
         icon: <FileText className="w-3.5 h-3.5" />,
-        label: `Explore ${(args.path || args.directory || '') as string}`,
+        label: getToolCallLabel(toolCall),
       }
     default:
       return {
         icon: <FileText className="w-3.5 h-3.5" />,
-        label: toolCall.name.replace(/([A-Z])/g, ' $1').trim(),
+        label: getToolCallLabel(toolCall),
       }
   }
 }
@@ -222,7 +218,7 @@ export function ActionLog({ toolCalls, isLoading, className = '' }: ActionLogPro
             animate={{ opacity: [0.4, 1, 0.4] }}
             transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <span className="text-[12px] text-[#737373]">Working...</span>
+          <span className="text-[12px] text-[#8c8c8c]">Moving through the build...</span>
         </div>
       )}
 
@@ -233,7 +229,7 @@ export function ActionLog({ toolCalls, isLoading, className = '' }: ActionLogPro
           className="flex items-center gap-2 pl-4 py-0.5 text-[11px] text-[#606060] hover:text-[#909090] transition-colors"
         >
           <div className="w-[7px] h-[7px] rounded-full bg-[#252525]" />
-          <span>{hiddenCount} more action{hiddenCount !== 1 ? 's' : ''}...</span>
+          <span>Show {hiddenCount} earlier step{hiddenCount !== 1 ? 's' : ''}</span>
         </button>
       )}
 

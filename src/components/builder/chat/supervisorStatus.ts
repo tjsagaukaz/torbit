@@ -3,29 +3,31 @@ import type { SupervisorEvent } from '@/lib/supervisor/events'
 export function getInlineSupervisorStatus(event: SupervisorEvent): string | null {
   switch (event.event) {
     case 'run_started':
-      return 'Starting your build.'
+      return '🤝 I’m on it and getting the build moving.'
     case 'route_selected':
-      return 'Planning the build.'
+      return '🧭 Lining up the best first pass.'
     case 'gate_started':
-      if (event.stage === 'vibe_audit') return 'Checking the project before building.'
-      if (event.stage === 'execution') return 'Starting file changes.'
-      return 'Working through the build.'
+      if (event.stage === 'vibe_audit') return '👀 Checking the current project before I touch files.'
+      if (event.stage === 'brief') return '🧩 Packing your request, context, and rules into the build brief.'
+      if (event.stage === 'execution') return '🛠️ Handing the build brief to the builder.'
+      return '⚙️ Moving through the next build step.'
     case 'gate_passed':
-      if (event.stage === 'vibe_audit') return 'Checks passed. Moving into the build.'
-      if (event.stage === 'execution') return 'Build step finished.'
+      if (event.stage === 'vibe_audit') return '✅ Project check looks good. Moving into the build.'
+      if (event.stage === 'brief') return '✅ Build brief is ready. Starting the first pass.'
+      if (event.stage === 'execution') return '✅ That step landed cleanly.'
       return null
     case 'gate_failed':
-      return 'A check failed. Trying to recover.'
+      return '⚠️ Hit an issue. I’m trying the safest recovery path.'
     case 'autofix_started':
-      return 'Cleaning up issues found during checks.'
+      return '🧹 Cleaning up issues I found along the way.'
     case 'autofix_succeeded':
-      return 'Cleanup worked. Continuing.'
+      return '✅ Cleanup worked. Continuing.'
     case 'autofix_failed':
-      return 'Automatic cleanup could not finish the fix.'
+      return '⚠️ Automatic cleanup could not finish that fix.'
     case 'fallback_invoked':
-      return 'Retrying with a backup model.'
+      return '🔁 Hit a snag. Switching to a backup path and keeping the build alive.'
     case 'run_completed':
-      return event.details.success === false ? 'The build hit an issue.' : 'Build finished.'
+      return event.details.success === false ? '⚠️ I hit an issue before the finish line.' : '🎉 Your update is ready.'
     case 'intent_classified':
     default:
       return null

@@ -15,16 +15,17 @@ function makeEvent(event: SupervisorEvent['event'], stage: string, success = tru
 
 describe('getInlineSupervisorStatus', () => {
   it('maps early build phases to plain language', () => {
-    expect(getInlineSupervisorStatus(makeEvent('run_started', 'run'))).toBe('Starting your build.')
-    expect(getInlineSupervisorStatus(makeEvent('route_selected', 'routing'))).toBe('Planning the build.')
-    expect(getInlineSupervisorStatus(makeEvent('gate_started', 'vibe_audit'))).toBe('Checking the project before building.')
-    expect(getInlineSupervisorStatus(makeEvent('gate_started', 'execution'))).toBe('Starting file changes.')
+    expect(getInlineSupervisorStatus(makeEvent('run_started', 'run'))).toBe('🤝 I’m on it and getting the build moving.')
+    expect(getInlineSupervisorStatus(makeEvent('route_selected', 'routing'))).toBe('🧭 Lining up the best first pass.')
+    expect(getInlineSupervisorStatus(makeEvent('gate_started', 'vibe_audit'))).toBe('👀 Checking the current project before I touch files.')
+    expect(getInlineSupervisorStatus(makeEvent('gate_started', 'brief'))).toBe('🧩 Packing your request, context, and rules into the build brief.')
+    expect(getInlineSupervisorStatus(makeEvent('gate_started', 'execution'))).toBe('🛠️ Handing the build brief to the builder.')
   })
 
   it('maps fallback and failure events', () => {
-    expect(getInlineSupervisorStatus(makeEvent('fallback_invoked', 'execution'))).toBe('Retrying with a backup model.')
-    expect(getInlineSupervisorStatus(makeEvent('gate_failed', 'execution'))).toBe('A check failed. Trying to recover.')
-    expect(getInlineSupervisorStatus(makeEvent('run_completed', 'run', false))).toBe('The build hit an issue.')
+    expect(getInlineSupervisorStatus(makeEvent('fallback_invoked', 'execution'))).toBe('🔁 Hit a snag. Switching to a backup path and keeping the build alive.')
+    expect(getInlineSupervisorStatus(makeEvent('gate_failed', 'execution'))).toBe('⚠️ Hit an issue. I’m trying the safest recovery path.')
+    expect(getInlineSupervisorStatus(makeEvent('run_completed', 'run', false))).toBe('⚠️ I hit an issue before the finish line.')
   })
 
   it('ignores internal classification chatter', () => {

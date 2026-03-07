@@ -24,7 +24,10 @@ import type { Message, AgentId } from './chat/types'
 import { ChatHistorySkeleton } from '@/components/ui/skeletons'
 import { useStreamChat } from './chat/useStreamChat'
 import { useSupervisor } from './chat/useSupervisor'
-import { getInitialAssistantMessage } from './chat/initialResponse'
+import {
+  getInitialAssistantMessage,
+  getInitialAssistantStatusLines,
+} from './chat/initialResponse'
 import type { RunDiagnosticsState } from './chat/useStreamChat'
 import type { RunStatus } from './chat/ExecutionStatusRail'
 
@@ -224,14 +227,20 @@ export default function ChatPanel() {
     const assistantId = crypto.randomUUID()
 
     let initialContent: string
+    let initialStatusLines: string[]
     if (isHealRequest) {
       const errorMatch = messageContent.match(/Error Type:\s*(\w+)/i) ||
                          messageContent.match(/(\w+_ERROR)/i) ||
                          messageContent.match(/Error:\s*(.+?)(?:\n|$)/i)
       const errorType = errorMatch?.[1] || 'issue'
-      initialContent = `Detected: ${errorType.toLowerCase().replace(/_/g, ' ')}. Patching...`
+      initialContent = `I found a ${errorType.toLowerCase().replace(/_/g, ' ')}. I’m fixing it now 🩺`
+      initialStatusLines = [
+        '🔎 Reproducing the issue.',
+        '🛠️ Getting the fix ready.',
+      ]
     } else {
       initialContent = getInitialAssistantMessage(messageContent)
+      initialStatusLines = getInitialAssistantStatusLines(messageContent)
     }
 
     setMessages(prev => [...prev, {
@@ -239,6 +248,7 @@ export default function ChatPanel() {
       role: 'assistant',
       content: initialContent,
       agentId,
+      statusLines: initialStatusLines,
       toolCalls: [],
     }])
 

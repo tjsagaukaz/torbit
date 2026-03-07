@@ -213,7 +213,7 @@ function getLastUserMessage(messages: Array<{ role: 'user' | 'assistant' | 'syst
 
 function buildToolOnlyFallback(toolCalls: Array<{ name: string; args: Record<string, unknown> }>): string {
   if (toolCalls.length === 0) {
-    return 'Request completed, but no response text was returned. Please retry for a detailed summary.'
+    return 'I finished the request, but I did not get a written summary back. Please retry if you want a fuller explanation.'
   }
 
   const mutationCalls = toolCalls.filter((toolCall) => (
@@ -224,7 +224,7 @@ function buildToolOnlyFallback(toolCalls: Array<{ name: string; args: Record<str
   ))
 
   if (mutationCalls.length === 0) {
-    return `Completed ${toolCalls.length} tool step${toolCalls.length === 1 ? '' : 's'}.`
+    return `I finished ${toolCalls.length} build step${toolCalls.length === 1 ? '' : 's'}. Check the activity log for the exact steps.`
   }
 
   const touchedFiles = Array.from(new Set(
@@ -237,12 +237,12 @@ function buildToolOnlyFallback(toolCalls: Array<{ name: string; args: Record<str
   ))
 
   if (touchedFiles.length === 0) {
-    return `Applied ${mutationCalls.length} file change${mutationCalls.length === 1 ? '' : 's'}.`
+    return `I made ${mutationCalls.length} file change${mutationCalls.length === 1 ? '' : 's'}.`
   }
 
   const preview = touchedFiles.slice(0, 3).join(', ')
   const suffix = touchedFiles.length > 3 ? ` and ${touchedFiles.length - 3} more` : ''
-  return `Applied ${mutationCalls.length} file change${mutationCalls.length === 1 ? '' : 's'}: ${preview}${suffix}.`
+  return `I updated ${mutationCalls.length} file${mutationCalls.length === 1 ? '' : 's'}: ${preview}${suffix}.`
 }
 
 function createAgentPrompt(agentPrompt: string): string {
@@ -1006,6 +1006,12 @@ const authedChatHandler = withAuth(async (req, { user }) => {
           }
         }
 
+        emitSupervisor('gate_started', 'brief', 'Preparing the build brief and project context.', {
+          file_count: parsedBody.fileManifest?.totalFiles ?? 0,
+          has_taste_profile: Boolean(parsedBody.tasteProfilePrompt),
+          has_persisted_invariants: Boolean(parsedBody.persistedInvariants),
+        })
+
         const systemPrompt = buildSystemPrompt({
           agentId: requestedAgentId,
           userPrompt,
@@ -1014,6 +1020,11 @@ const authedChatHandler = withAuth(async (req, { user }) => {
           tasteProfilePrompt: parsedBody.tasteProfilePrompt,
           fileManifest: parsedBody.fileManifest,
           guardrailPrompt,
+        })
+
+        emitSupervisor('gate_passed', 'brief', 'Build brief ready. Handing off to the builder.', {
+          file_count: parsedBody.fileManifest?.totalFiles ?? 0,
+          has_guardrails: guardrailPrompt.length > 0,
         })
 
         const executionResult = await executeActionFlow({
