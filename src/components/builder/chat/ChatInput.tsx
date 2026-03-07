@@ -15,17 +15,9 @@ interface ChatInputProps {
 }
 
 const QUICK_PROMPTS = [
-  'Build a premium SaaS dashboard for revenue operations with real-seeming metrics, rich empty states, and a distinct motion language.',
-  'Design a launch landing page with a strong visual point of view, a clear narrative arc, pricing, FAQ, and high-conv CTAs.',
-  'Create a serious internal ops console with dense but legible workflows, audit history, bulk actions, and safe failure handling.',
-  'Build an Expo mobile product with native-feeling navigation, onboarding, account settings, and polished loading and error states.',
-]
-
-const QUALITY_INSERTS = [
-  'Include empty, loading, and error states.',
-  'Give it a distinct visual system, not a template look.',
-  'Use realistic seeded data and believable workflows.',
-  'Bias for production-safe architecture and validation.',
+  'Build a polished SaaS dashboard for a small business with onboarding, a dashboard, settings, and realistic sample data.',
+  'Create a landing page for a new product with clear sections, pricing, FAQ, and strong call-to-action buttons.',
+  'Build a mobile app with onboarding, navigation, account settings, and good loading and error states.',
 ]
 
 export function ChatInput({
@@ -82,9 +74,9 @@ export function ChatInput({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2" role="radiogroup" aria-label="Prompt mode">
         <div className="flex flex-wrap items-center gap-2">
           {([
-            { value: 'auto', label: 'Architected', hint: 'Torbit plans and routes the work' },
-            { value: 'chat', label: 'Refine', hint: 'Keep this as conversation and critique' },
-            { value: 'action', label: 'Direct Build', hint: 'Skip discussion and produce immediately' },
+            { value: 'auto', label: 'Guide build', hint: 'Torbit plans the work as it goes' },
+            { value: 'chat', label: 'Talk it through', hint: 'Keep this as a back-and-forth conversation' },
+            { value: 'action', label: 'Build now', hint: 'Skip the discussion and start building' },
           ] as const).map((mode) => (
             <button
               key={mode.value}
@@ -105,14 +97,14 @@ export function ChatInput({
           ))}
         </div>
         <span className="text-[10px] text-[#696969]">
-          {isLoading ? 'Torbit is executing the current run' : 'Outcome + audience + differentiator + feel'}
+          {isLoading ? 'Torbit is building your request' : 'Be clear about the product, user, and style'}
         </span>
       </div>
 
       {!hasMessages && !input.trim() && (
-        <div className="mb-3 space-y-2.5">
+        <div className="mb-3">
           <div>
-            <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[#737373]">Mission Starters</p>
+            <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[#737373]">Try one of these</p>
             <div className="flex flex-wrap gap-1.5">
               {QUICK_PROMPTS.map((prompt) => (
                 <button
@@ -127,23 +119,6 @@ export function ChatInput({
               ))}
             </div>
           </div>
-
-          <div>
-            <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[#737373]">Quality Lenses</p>
-            <div className="flex flex-wrap gap-1.5">
-              {QUALITY_INSERTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => insertText(prompt)}
-                  className="rounded-full border border-cyan-300/10 bg-cyan-300/[0.08] px-3 py-1.5 text-left text-[10px] text-cyan-100/70 transition-colors hover:border-cyan-200/20 hover:text-cyan-50 disabled:opacity-50"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 
@@ -151,9 +126,9 @@ export function ChatInput({
         <div className="overflow-hidden rounded-[22px] border border-white/[0.08] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] shadow-[0_18px_60px_rgba(0,0,0,0.35)] transition-all focus-within:border-white/[0.16]">
           <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#7d7d7d]">Torbit Build Brief</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#7d7d7d]">Start here</p>
               <p className="mt-1 text-[11px] text-[#a8a8a8]">
-                Ask for the product, the quality bar, and the emotional tone.
+                Describe the product, who it is for, and how it should feel.
               </p>
             </div>
             <div className="hidden rounded-full border border-white/[0.08] bg-black/20 px-2.5 py-1 text-[10px] text-[#6d6d6d] sm:block">
@@ -168,8 +143,8 @@ export function ChatInput({
               onChange={(e) => onInputChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={hasMessages
-                ? 'Push the next iteration: what should change, tighten, or elevate?'
-                : 'Describe what Torbit should build, who it serves, what makes it different, and how it should feel.'}
+                ? 'What should change next?'
+                : 'What should Torbit build? Describe the product, who it is for, and the style you want.'}
               aria-label="Describe what you want Torbit to produce"
               disabled={isLoading}
               rows={1}
@@ -199,12 +174,9 @@ export function ChatInput({
         </div>
       </form>
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px] text-[#6f6f6f]">
-        <span className="rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1">State the user</span>
-        <span className="rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1">Name the core workflow</span>
-        <span className="rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1">Call out edge states</span>
-        <span className="rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1">Set the visual direction</span>
-      </div>
+      <p className="mt-2.5 text-[10px] text-[#6f6f6f]">
+        Tip: mention the user, the main workflow, and the visual style you want.
+      </p>
     </motion.div>
   )
 }

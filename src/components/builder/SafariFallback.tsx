@@ -9,7 +9,7 @@ import { detectBrowser } from '@/lib/browser-detect'
  * Honest, authoritative gate for browsers that don't support WebContainers.
  * Safari users can still:
  * - Generate code
- * - Review governed artifacts
+ * - Review generated files
  * - Export verified projects
  * 
  * What they don't get:
@@ -84,7 +84,7 @@ export function SafariFallback({
               <svg className="w-4 h-4 text-emerald-500/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-              Review governed artifacts
+              Review generated files
             </li>
             <li className="flex items-center gap-2.5 text-[13px] text-[#a0a0a0]">
               <svg className="w-4 h-4 text-emerald-500/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -157,26 +157,19 @@ function BuilderPageContent() {
 
   const activeAgent = agents.find((agent) => agent.status === 'working' || agent.status === 'thinking')
   const isWorking = isGenerating || Boolean(activeAgent)
-  const projectToken = projectId ? projectId.slice(0, 8) : 'session'
-  const missionLabel = projectType === 'mobile' ? 'iOS Product Foundry' : 'Launch-grade Web Foundry'
+  const missionLabel = projectType === 'mobile' ? 'iOS app' : 'Web app'
   const workspaceTitle = useMemo(() => {
     const normalizedPrompt = prompt.replace(/\s+/g, ' ').trim()
-    if (!normalizedPrompt) return 'Start with a clear build objective'
+    if (!normalizedPrompt) return 'What do you want to build?'
     return normalizedPrompt.length > 72 ? `${normalizedPrompt.slice(0, 69)}...` : normalizedPrompt
   }, [prompt])
   const collaboratorLabel = onlineCollaboratorCount > 0
     ? `${onlineCollaboratorCount + 1} online`
-    : 'Solo session'
-  const statusLabel = isWorking ? 'Run in motion' : 'Ready to build'
+    : 'Working solo'
+  const statusLabel = isWorking ? 'Building now' : 'Ready to build'
   const statusDetail = activeAgent?.currentTask || (isWorking
-    ? 'Torbit is composing, wiring, and verifying the workspace.'
-    : 'Describe the product, the standard, and the differentiator.')
-  const qualitySignals = useMemo(() => ([
-    'Launch-grade defaults',
-    projectType === 'mobile' ? 'Expo-router discipline' : 'Production web architecture',
-    'Taste-adaptive iteration',
-    isWorking ? 'Live runtime verification' : 'Ready for governed generation',
-  ]), [isWorking, projectType])
+    ? 'Building your app and checking the preview.'
+    : 'Describe the product in plain language to get started.')
 
   const chatPanel = (
     <ErrorBoundary name="ChatPanel" fallback={<ChatErrorFallback onRetry={handleChatRetry} />}>
@@ -294,17 +287,17 @@ function BuilderPageContent() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
           <div className="pointer-events-none absolute inset-x-5 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.16] to-transparent" />
 
-          <div className="grid gap-3 px-4 py-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.95fr)]">
+          <div className="grid gap-3 px-4 py-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-white/[0.12] bg-white/[0.05] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[#dedede]">
-                  Torbit Mission Control
+                  Torbit
                 </span>
                 <span className="rounded-full border border-cyan-400/15 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-medium text-cyan-200/80">
                   {missionLabel}
                 </span>
-                <span className="rounded-full border border-white/[0.08] bg-black/30 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-[#767676]">
-                  Workspace {projectToken}
+                <span className="rounded-full border border-white/[0.08] bg-black/30 px-2 py-1 text-[10px] text-[#8b8b8b]">
+                  {collaboratorLabel}
                 </span>
               </div>
 
@@ -313,42 +306,25 @@ function BuilderPageContent() {
                   {workspaceTitle}
                 </p>
                 <p className="mt-1 max-w-3xl text-[11px] leading-relaxed text-[#8c8c8c] sm:text-[12px]">
-                  Torbit compiles intent, repo structure, runtime telemetry, governance rules, and taste memory into one
-                  controlled build loop. The objective is production-grade work, not demo-grade output.
+                  Describe the app you want. Torbit will build it and show the result in the preview.
                 </p>
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {qualitySignals.map((signal) => (
-                  <span
-                    key={signal}
-                    className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[10px] font-medium text-[#bababa]"
-                  >
-                    {signal}
-                  </span>
-                ))}
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="grid gap-2 sm:grid-cols-3">
-                <HeaderMetric
-                  label="Run State"
-                  value={statusLabel}
-                  detail={statusDetail}
-                  emphasis={isWorking ? 'active' : 'default'}
-                  leading={isWorking ? <TorbitSpinner size="xs" speed="fast" /> : <span className="h-2 w-2 rounded-full bg-[#4a4a4a]" />}
-                />
-                <HeaderMetric
-                  label="Collaboration"
-                  value={collaboratorLabel}
-                  detail={onlineCollaboratorCount > 0 ? 'Live presence detected' : 'Private focus session'}
-                />
-                <HeaderMetric
-                  label="Artifacts"
-                  value={`${files.length}`}
-                  detail={files.length > 0 ? 'Tracked files in workspace' : 'No generated assets yet'}
-                />
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-end gap-2 text-[11px]">
+                <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 ${
+                  isWorking
+                    ? 'border-emerald-500/20 bg-emerald-500/[0.08] text-[#f2f2f2]'
+                    : 'border-white/[0.08] bg-white/[0.035] text-[#e2e2e2]'
+                }`}>
+                  {isWorking ? <TorbitSpinner size="xs" speed="fast" /> : <span className="h-2 w-2 rounded-full bg-[#4a4a4a]" />}
+                  <span>{statusLabel}</span>
+                </span>
+                <span className="rounded-full border border-white/[0.08] bg-white/[0.035] px-3 py-1.5 text-[#a7a7a7]">
+                  {files.length} {files.length === 1 ? 'file' : 'files'}
+                </span>
+                <span className="max-w-[220px] truncate text-[#7f7f7f]">{statusDetail}</span>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -390,7 +366,7 @@ function BuilderPageContent() {
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-[11px] font-medium">Ops</span>
+                    <span className="text-[11px] font-medium">Activity</span>
                     <span className="hidden text-[10px] text-[#7a7a7a] md:inline">T</span>
                   </button>
                   <Link
@@ -444,8 +420,8 @@ function BuilderPageContent() {
             <div className="flex h-full flex-col">
               <div className="flex h-11 items-center justify-between border-b border-white/[0.08] px-4">
                 <div>
-                  <p className="text-[12px] font-medium text-[#e8e8e8]">Task Control</p>
-                  <p className="text-[10px] text-[#767676]">Run health and execution details</p>
+                  <p className="text-[12px] font-medium text-[#e8e8e8]">Activity</p>
+                  <p className="text-[10px] text-[#767676]">Build progress and checks</p>
                 </div>
                 <button
                   onClick={() => setShowTasks(false)}
@@ -495,36 +471,5 @@ function PreviewModeButton({
       <span className="text-[11px] font-medium">{label}</span>
       <span className="hidden text-[10px] text-[#6c6c6c] lg:inline">{shortcut}</span>
     </button>
-  )
-}
-
-function HeaderMetric({
-  label,
-  value,
-  detail,
-  leading,
-  emphasis = 'default',
-}: {
-  label: string
-  value: string
-  detail: string
-  leading?: ReactNode
-  emphasis?: 'default' | 'active'
-}) {
-  return (
-    <div
-      className={`rounded-2xl border px-3 py-2.5 ${
-        emphasis === 'active'
-          ? 'border-emerald-500/20 bg-emerald-500/[0.08]'
-          : 'border-white/[0.08] bg-white/[0.035]'
-      }`}
-    >
-      <div className="mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-[#727272]">
-        {leading}
-        <span>{label}</span>
-      </div>
-      <p className="truncate text-[12px] font-medium text-[#f2f2f2]">{value}</p>
-      <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-[#808080]">{detail}</p>
-    </div>
   )
 }

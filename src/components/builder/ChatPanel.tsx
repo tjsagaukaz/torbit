@@ -123,17 +123,13 @@ export default function ChatPanel() {
     }
   }, [])
 
-  const scrollToLatest = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [])
-
   const chatSessionSummary = runStatusDetail
     || currentTask
     || (isLoading
-      ? 'Torbit is actively processing your request.'
+      ? 'Torbit is working on your request.'
       : messages.length === 0
-        ? 'Pick a starter prompt or describe a production-grade artifact.'
-        : 'Session ready for the next iteration.')
+        ? 'Describe the app you want to build.'
+        : 'Ready for your next change.')
 
   const runToneClass = runStatus === 'Needs Input'
     ? 'text-red-300 border-red-500/30 bg-red-500/10'
@@ -540,7 +536,7 @@ export default function ChatPanel() {
         {liveMessage}
       </div>
 
-      {/* Header - Torbit branding */}
+      {/* Header */}
       <div className="h-11 border-b border-white/[0.08] bg-[#050505]/95 flex items-center justify-between px-4 shrink-0 backdrop-blur-sm">
         <AnimatePresence mode="wait">
           {!chatCollapsed && (
@@ -552,7 +548,7 @@ export default function ChatPanel() {
             >
               <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-emerald-400 animate-pulse' : 'bg-[#555555]'}`} />
               <span className="text-[13px] font-medium text-[#dddddd]">
-                Torbit Session
+                Build chat
               </span>
             </motion.div>
           )}
@@ -585,21 +581,10 @@ export default function ChatPanel() {
                 <div className={`rounded-md border px-2 py-1 text-[10px] font-medium ${runToneClass}`}>
                   {runStatus}
                 </div>
-                <div className="text-[10px] text-[#858585]">{files.length} files</div>
-                <div className="hidden text-[10px] text-[#666666] xl:block">
-                  {isLoading ? 'Active run' : 'Idle'}
-                </div>
+                <div className="text-[10px] text-[#858585]">{files.length} {files.length === 1 ? 'file' : 'files'}</div>
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={focusComposer}
-                  className="rounded-md border border-white/[0.1] bg-white/[0.03] px-2 py-1 text-[10px] text-[#a8a8a8] transition-colors hover:border-white/[0.16] hover:text-[#f2f2f2]"
-                  aria-label="Focus composer (/ or Cmd+K)"
-                >
-                  Compose
-                </button>
                 <button
                   type="button"
                   onClick={() => setShowInspector((previous) => !previous)}
@@ -611,15 +596,7 @@ export default function ChatPanel() {
                   aria-label="Toggle inspector (Alt+I)"
                   aria-pressed={showInspector}
                 >
-                  Inspector
-                </button>
-                <button
-                  type="button"
-                  onClick={scrollToLatest}
-                  className="rounded-md border border-white/[0.1] bg-white/[0.03] px-2 py-1 text-[10px] text-[#a8a8a8] transition-colors hover:border-white/[0.16] hover:text-[#f2f2f2]"
-                  aria-label="Jump to latest message"
-                >
-                  Latest
+                  Details
                 </button>
               </div>
             </div>

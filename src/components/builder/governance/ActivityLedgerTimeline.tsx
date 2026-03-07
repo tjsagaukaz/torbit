@@ -210,7 +210,7 @@ function ProofDetails({ phase, entry }: ProofDetailsProps) {
       {phase === 'build' && (
         <>
           {proof.artifactCount !== undefined && (
-            <ProofRow label="Governed artifacts" value={`${proof.artifactCount} files`} />
+            <ProofRow label="Files created" value={`${proof.artifactCount} files`} />
           )}
           
           {/* Capability-grouped artifacts */}

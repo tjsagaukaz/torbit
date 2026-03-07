@@ -4,38 +4,20 @@ import { TorbitLogo } from '@/components/ui/TorbitLogo'
 
 const PRODUCTION_STARTERS = [
   {
-    label: 'Flagship SaaS',
-    description: 'A differentiated customer product with real workflows and premium polish.',
-    prompt: 'Build a flagship B2B SaaS product with a premium brand system, opinionated information hierarchy, realistic seeded data, and polished motion. Include onboarding, dashboard, account settings, empty states, loading states, error states, and production-safe forms.',
+    label: 'SaaS dashboard',
+    description: 'A product dashboard with onboarding, key screens, and realistic sample data.',
+    prompt: 'Build a polished SaaS dashboard with onboarding, a dashboard, settings, realistic sample data, and clear empty, loading, and error states.',
   },
   {
-    label: 'Operator Console',
-    description: 'An internal system for teams who need speed, clarity, and controlled risk.',
-    prompt: 'Build an internal operator console with role-based access control, audit history, live status surfaces, dense but readable tables, filterable workflows, and safe destructive actions. Make it fast, serious, and operationally credible.',
+    label: 'Internal tool',
+    description: 'A simple internal app with tables, filters, and safe actions.',
+    prompt: 'Build an internal operations tool with a dashboard, tables, filters, detail views, and safe destructive actions. Keep it clear and fast.',
   },
   {
-    label: 'Launch Landing System',
-    description: 'A marketing system with a point of view, not a template.',
-    prompt: 'Design a launch-ready marketing site with a bold visual identity, distinctive typography hierarchy, strong motion direction, social proof, pricing, FAQ, and conversion-focused structure. Avoid generic SaaS gradients and interchangeable blocks.',
+    label: 'Marketing site',
+    description: 'A landing page with strong hierarchy, pricing, and FAQ.',
+    prompt: 'Design a marketing site with a clear hero, benefits, pricing, FAQ, and strong calls to action. Make it feel polished and modern.',
   },
-  {
-    label: 'Mobile Product',
-    description: 'An Expo app with real navigation, states, and App Store-ready structure.',
-    prompt: 'Build a mobile product in Expo with a strong visual system, production-safe navigation patterns, onboarding, core tab flows, account settings, empty/loading/error states, and native-feeling interactions. Treat mobile as a first-class product, not a responsive web port.',
-  },
-]
-
-const QUALITY_DOCTRINES = [
-  'Distinct visual identity',
-  'Real data and edge states',
-  'Governed runtime verification',
-]
-
-const BRIEF_CHECKLIST = [
-  'Who it is for',
-  'The core workflow',
-  'What makes it different',
-  'How it should feel',
 ]
 
 interface EmptyStateProps {
@@ -56,40 +38,14 @@ export function EmptyState({ onSelectTemplate }: EmptyStateProps) {
               <TorbitLogo size="lg" variant="muted" animated />
             </div>
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#8d8d8d]">Torbit Build Brief</p>
-              <p className="text-[14px] font-medium text-[#f5f5f5]">Describe the product and the standard.</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#8d8d8d]">Start a build</p>
+              <p className="text-[14px] font-medium text-[#f5f5f5]">Describe what you want to make.</p>
             </div>
           </div>
 
           <p className="text-[12px] leading-relaxed text-[#a0a0a0]">
-            Torbit performs best when the brief includes the outcome, audience, differentiator, and visual direction.
-            It is tuned for launch-grade work, not generic scaffolds.
+            Keep it simple. Mention the product, who it is for, and the style you want.
           </p>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {QUALITY_DOCTRINES.map((doctrine) => (
-              <span
-                key={doctrine}
-                className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[10px] font-medium text-[#c7c7c7]"
-              >
-                {doctrine}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-5 rounded-2xl border border-white/[0.08] bg-black/25 p-3.5">
-            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#7c7c7c]">Strong Brief Ingredients</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {BRIEF_CHECKLIST.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-2.5 py-2 text-[11px] text-[#cfcfcf]"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="mt-4 space-y-2">
@@ -121,11 +77,7 @@ export function EmptyState({ onSelectTemplate }: EmptyStateProps) {
           ))}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          <span className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[10px] text-white/45">/ focus composer</span>
-          <span className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[10px] text-white/45">Alt+I inspector</span>
-          <span className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[10px] text-white/45">Shift+Enter newline</span>
-        </div>
+        <p className="mt-4 text-[10px] text-white/45">Press `/` to jump to the prompt box.</p>
       </div>
     </div>
   )

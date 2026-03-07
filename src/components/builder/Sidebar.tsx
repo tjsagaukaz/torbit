@@ -40,7 +40,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('files')
   const { projectType, files } = useBuilderStore()
   const invariantCount = useInvariantCount()
-  const builderLabel = projectType === 'mobile' ? 'iOS Product Foundry' : 'Web Product Foundry'
+  const builderLabel = projectType === 'mobile' ? 'iOS app' : 'Web app'
   
   return (
     <motion.aside
@@ -59,8 +59,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               className="flex-1 min-w-0"
             >
               <div className="min-w-0">
-                <p className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-[#8d8d8d]">Control Surface</p>
-                <p className="truncate text-[12px] text-[#e2e2e2]">Torbit Systems</p>
+                <p className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-[#8d8d8d]">Workspace</p>
+                <p className="truncate text-[12px] text-[#e2e2e2]">Project files</p>
               </div>
             </motion.div>
           )}
@@ -92,19 +92,19 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {!collapsed && (
         <div className="mx-2 mt-2 overflow-hidden rounded-2xl border border-white/[0.1] bg-white/[0.035]">
           <div className="border-b border-white/[0.08] px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#808080]">Build Compass</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#808080]">Project</p>
             <p className="mt-1 text-[12px] font-medium text-[#f3f3f3]">{builderLabel}</p>
             <p className="mt-1 text-[11px] leading-relaxed text-[#7d7d7d]">
-              Bias the workspace toward shippable structure, differentiated interfaces, and governed changes.
+              Keep an eye on your files and checks while Torbit builds.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-px bg-white/[0.06]">
             <div className="bg-[#070707] px-3 py-2.5">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-[#727272]">Artifacts</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[#727272]">Files</p>
               <p className="mt-1 text-[15px] font-semibold text-[#e8e8e8]">{files.length}</p>
             </div>
             <div className="bg-[#070707] px-3 py-2.5">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-[#727272]">Guardrails</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-[#727272]">Checks</p>
               <p className={`mt-1 text-[15px] font-semibold ${invariantCount > 0 ? 'text-emerald-300' : 'text-[#8a8a8a]'}`}>
                 {invariantCount}
               </p>
@@ -143,7 +143,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>
-                Guardrails
+                Checks
                 {invariantCount > 0 && (
                   <span className="text-[9px] text-emerald-500/75 tabular-nums">{invariantCount}</span>
                 )}
@@ -206,7 +206,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               className={`relative w-10 h-10 flex items-center justify-center hover:text-[#d0d0d0] hover:bg-white/[0.06] rounded-xl transition-all ${
                 activeTab === 'protected' ? 'text-[#e0e0e0] bg-white/[0.06]' : 'text-[#5e5e5e]'
               }`}
-              title="Guardrails"
+              title="Checks"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />

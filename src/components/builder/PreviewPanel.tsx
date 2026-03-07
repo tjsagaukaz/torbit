@@ -284,37 +284,31 @@ export default function PreviewPanel() {
   const runtimeState = !isMounted
     ? 'Idle'
     : isBooting
-      ? 'Securing runtime'
+      ? 'Starting preview'
       : serverUrl
-        ? 'Live preview'
+        ? 'Preview ready'
         : error
-          ? 'Needs attention'
+          ? 'Fix needed'
           : files.length > 0
-            ? 'Artifacts staged'
-            : 'Awaiting run'
+            ? 'Finishing setup'
+            : 'Waiting to start'
 
   const runtimeDetail = error
-    ? 'Preview requires intervention before the canvas can render again.'
+    ? 'The preview hit an error and needs attention.'
     : serverUrl
-      ? 'Verified output is ready for inspection.'
+      ? 'Your app is ready to review.'
       : isBooting
-        ? 'Booting the remote environment and validating the app.'
+        ? 'Getting the preview environment ready.'
         : files.length > 0
-          ? 'Build artifacts are ready while the environment finalizes.'
-          : 'Start a run to open a live, runtime-backed canvas.'
+          ? 'Your files are ready. The preview is still starting.'
+          : 'Start a build to see your app here.'
 
   const currentDevicePreset = DEVICE_PRESETS[devicePreset] || DEVICE_PRESETS['iphone-15-pro-max']
   const surfaceValue = previewDevice === 'mobile'
     ? `${currentDevicePreset.name} · ${deviceOrientation === 'portrait' ? 'Portrait' : 'Landscape'}`
     : previewDevice === 'tablet'
-      ? 'Tablet canvas'
-      : 'Desktop canvas'
-  const artifactValue = files.length === 0 ? 'No artifacts yet' : `${files.length} artifact${files.length === 1 ? '' : 's'}`
-  const monitorValue = showRuntimeLog
-    ? `${terminalLines.length} line${terminalLines.length === 1 ? '' : 's'} visible`
-    : isGenerating
-      ? 'Run in motion'
-      : 'Monitor collapsed'
+      ? 'Tablet preview'
+      : 'Desktop preview'
 
   const handleRefreshPreview = () => {
     const iframe = document.getElementById('webcontainer-preview') as HTMLIFrameElement | null
@@ -331,7 +325,7 @@ export default function PreviewPanel() {
                 <div className="min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10px]">
                     <span className="rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 py-1 font-medium uppercase tracking-[0.18em] text-[#e8e8e8]">
-                      Preview Workbench
+                      Preview
                     </span>
                     <span className={`rounded-full border px-2.5 py-1 ${
                       serverUrl
@@ -349,11 +343,12 @@ export default function PreviewPanel() {
                     </span>
                   </div>
                   <h2 className="truncate text-[15px] font-medium tracking-[-0.02em] text-[#f6f6f6]">
-                    Torbit Canvas
+                    See your app here
                   </h2>
                   <p className="mt-1 max-w-3xl text-[11px] leading-relaxed text-[#919191]">
-                    Inspect verified output, switch between review surfaces, and monitor runtime health without leaving the build loop.
+                    Build first, then review the live preview as Torbit updates it.
                   </p>
+                  <p className="mt-2 text-[11px] text-[#7e7e7e]">{runtimeDetail}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5 xl:justify-end">
@@ -424,30 +419,6 @@ export default function PreviewPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
-                <WorkbenchMetricCard
-                  label="Runtime"
-                  value={runtimeState}
-                  detail={runtimeDetail}
-                  tone={serverUrl ? 'success' : error ? 'danger' : isBooting ? 'warning' : 'neutral'}
-                />
-                <WorkbenchMetricCard
-                  label="Review Surface"
-                  value={surfaceValue}
-                  detail={previewDevice === 'mobile' ? 'Device frame and orientation are active.' : 'Resize and inspect the current canvas mode.'}
-                />
-                <WorkbenchMetricCard
-                  label="Artifacts"
-                  value={artifactValue}
-                  detail={files.length > 0 ? 'Generated output is staged for preview, inspection, and export.' : 'The canvas will populate once Torbit produces files.'}
-                />
-                <WorkbenchMetricCard
-                  label="Monitor"
-                  value={monitorValue}
-                  detail={showRuntimeLog ? 'Keep the log open to watch boot, rebuild, and runtime diagnostics.' : 'Expand the runtime log when you need deeper execution detail.'}
-                />
-              </div>
-
               <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-3 xl:flex-row xl:items-center xl:justify-between">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center gap-0.5 rounded-xl border border-white/[0.08] bg-white/[0.03] p-1">
@@ -462,7 +433,7 @@ export default function PreviewPanel() {
                             ? 'bg-white/[0.12] text-[#f5f5f5]'
                             : 'text-[#666666] hover:text-[#c2c2c2]'
                         }`}
-                        title={`${device.charAt(0).toUpperCase() + device.slice(1)} (Alt+${device === 'desktop' ? '1' : device === 'tablet' ? '2' : '3'})`}
+                        title={`${device.charAt(0).toUpperCase() + device.slice(1)} preview`}
                       >
                         {device === 'desktop' && (
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -500,11 +471,6 @@ export default function PreviewPanel() {
                       </button>
                     </>
                   )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-[#727272]">
-                  <span className="rounded-full border border-white/[0.08] bg-black/20 px-2.5 py-1">Alt+1/2/3 switches surface</span>
-                  <span className="rounded-full border border-white/[0.08] bg-black/20 px-2.5 py-1">Alt+L toggles runtime log</span>
                 </div>
               </div>
             </div>
@@ -559,34 +525,6 @@ export default function PreviewPanel() {
       ) : (
         <CodeEditor />
       )}
-    </div>
-  )
-}
-
-function WorkbenchMetricCard({
-  label,
-  value,
-  detail,
-  tone = 'neutral',
-}: {
-  label: string
-  value: string
-  detail: string
-  tone?: 'neutral' | 'success' | 'warning' | 'danger'
-}) {
-  const toneClass = tone === 'success'
-    ? 'border-emerald-400/20 bg-emerald-400/[0.08]'
-    : tone === 'warning'
-      ? 'border-amber-300/20 bg-amber-300/[0.08]'
-      : tone === 'danger'
-        ? 'border-red-400/20 bg-red-500/[0.08]'
-        : 'border-white/[0.08] bg-white/[0.03]'
-
-  return (
-    <div className={`rounded-2xl border px-3 py-3 ${toneClass}`}>
-      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#777777]">{label}</p>
-      <p className="mt-2 text-[13px] font-medium tracking-[-0.02em] text-[#f2f2f2]">{value}</p>
-      <p className="mt-1 text-[11px] leading-relaxed text-[#8d8d8d]">{detail}</p>
     </div>
   )
 }
@@ -654,7 +592,7 @@ function PreviewContent({
   }, [serverUrl])
   
   if (!isMounted) {
-    return <StatusCard icon="loading" title="Loading..." subtitle="Initializing preview" />
+    return <StatusCard icon="loading" title="Loading preview" subtitle="Getting things ready." />
   }
   
   // Safari / Unsupported browser - show honest fallback gate
@@ -685,8 +623,8 @@ function PreviewContent({
       return (
         <StatusCard
           icon="empty"
-          title="Live preview unavailable"
-          subtitle="Set E2B_API_KEY to enable runtime preview. Code generation still works."
+          title="Preview unavailable"
+          subtitle="Set E2B_API_KEY to enable live preview. Code generation still works."
         />
       )
     }
@@ -694,18 +632,18 @@ function PreviewContent({
     const errorTitle = buildFailure
       ? (
         buildFailure.category === 'infra'
-          ? 'Infrastructure verification failed'
+          ? 'Preview setup failed'
           : buildFailure.category === 'dependency'
-            ? 'Dependency resolution failed'
+            ? 'Dependencies failed to install'
             : buildFailure.category === 'code'
-              ? 'Runtime build failed'
-              : 'Verification failed'
+              ? 'App build failed'
+              : 'Preview failed'
       )
-      : 'Verification failed'
+      : 'Preview failed'
 
     const errorSubtitle = buildFailure
       ? `${buildFailure.command ? `Command: ${buildFailure.command}. ` : ''}${buildFailure.actionableFix}`
-      : 'Check runtime log for details'
+      : 'Open the log for more detail.'
 
     const errorDetail = buildFailure?.exactLogLine || error
 
@@ -725,8 +663,8 @@ function PreviewContent({
     return (
       <StatusCard 
         icon="loading" 
-        title="Verifying environment" 
-        subtitle="Establishing secure runtime"
+        title="Starting preview" 
+        subtitle="Preparing the app so you can review it."
       />
     )
   }
@@ -759,7 +697,7 @@ function PreviewContent({
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </motion.svg>
         </motion.div>
-        <p className="text-[13px] text-white/50">Verified</p>
+        <p className="text-[13px] text-white/50">Preview ready</p>
       </motion.div>
     )
   }
@@ -780,8 +718,8 @@ function PreviewContent({
     return (
       <StatusCard 
         icon="loading" 
-        title="Validating runtime" 
-        subtitle={`${files.length} artifacts staged`}
+        title="Almost there" 
+        subtitle={`${files.length} ${files.length === 1 ? 'file' : 'files'} ready. Finishing preview setup.`}
       />
     )
   }
@@ -792,7 +730,7 @@ function PreviewContent({
       <StatusCard 
         icon="loading" 
         title="Preparing preview" 
-        subtitle="Output will appear here"
+        subtitle="Your app will appear here when the build starts."
       />
     )
   }
@@ -804,27 +742,19 @@ function PreviewContent({
 // Expectation Panel - Premium minimal design showing what will appear
 function ExpectationPanel() {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 text-center">
+    <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-6 text-center">
       <div className="flex flex-wrap items-center justify-center gap-1.5 text-[10px]">
         <span className="rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 py-1 font-medium uppercase tracking-[0.16em] text-[#efefef]">
-          Canvas Standing By
-        </span>
-        <span className="rounded-full border border-cyan-300/15 bg-cyan-300/[0.08] px-2.5 py-1 text-cyan-100/75">
-          Runtime-backed verification
+          Preview waiting
         </span>
         <span className="rounded-full border border-white/[0.08] bg-black/25 px-2.5 py-1 text-[#8a8a8a]">
-          Device-aware review
+          Desktop, tablet, and phone views
         </span>
       </div>
 
       <div className="w-full rounded-[30px] border border-white/[0.08] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-[24px] border border-white/[0.07] bg-black/30 p-5 text-left">
-            <div className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[#7e7e7e]">
-              <span className="inline-flex h-2 w-2 rounded-full bg-[#8a8a8a]" />
-              Preview Theater
-            </div>
-
             <div className="relative overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#050505]">
               <div className="flex h-10 items-center gap-1.5 border-b border-white/[0.06] px-4">
                 <div className="h-2 w-2 rounded-full bg-white/[0.12]" />
@@ -854,29 +784,20 @@ function ExpectationPanel() {
             </div>
 
             <h3 className="mt-5 text-[20px] font-medium tracking-[-0.03em] text-[#f5f5f5]">
-              A live, review-ready product canvas will appear here.
+              Your app preview will show up here.
             </h3>
             <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-[#989898]">
-              Torbit stages the output here once files, runtime boot, and verification pass far enough to make the artifact worth reviewing.
+              Start a build, then use this area to review the result and switch between screen sizes.
             </p>
           </div>
 
-          <div className="grid gap-3 text-left">
-            <div className="rounded-[24px] border border-white/[0.07] bg-white/[0.03] p-4">
-              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#777777]">What You Get</p>
-              <p className="mt-2 text-[15px] font-medium tracking-[-0.02em] text-[#f3f3f3]">Verified, device-aware output</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-[#8f8f8f]">
-                Review the actual rendered artifact across desktop, tablet, and mobile modes instead of reading generated code in isolation.
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-white/[0.07] bg-white/[0.03] p-4">
-              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#777777]">What Torbit Checks</p>
-              <ul className="mt-2 space-y-2 text-[12px] text-[#cfcfcf]">
-                <li className="rounded-2xl border border-white/[0.06] bg-black/25 px-3 py-2">Runtime boot, rebuild health, and error visibility</li>
-                <li className="rounded-2xl border border-white/[0.06] bg-black/25 px-3 py-2">Responsive review surfaces and device framing</li>
-                <li className="rounded-2xl border border-white/[0.06] bg-black/25 px-3 py-2">Export-ready output once the build loop lands</li>
-              </ul>
-            </div>
+          <div className="rounded-[24px] border border-white/[0.07] bg-white/[0.03] p-4 text-left">
+            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#777777]">What you can do here</p>
+            <ul className="mt-3 space-y-2 text-[12px] text-[#cfcfcf]">
+              <li className="rounded-2xl border border-white/[0.06] bg-black/25 px-3 py-2">View the app as it updates</li>
+              <li className="rounded-2xl border border-white/[0.06] bg-black/25 px-3 py-2">Switch between desktop, tablet, and phone</li>
+              <li className="rounded-2xl border border-white/[0.06] bg-black/25 px-3 py-2">Open the log if something breaks</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -975,7 +896,7 @@ function StatusCard({
   actionLabel?: string
   onAction?: () => void
 }) {
-  const statusLabel = icon === 'loading' ? 'Runtime in progress' : icon === 'error' ? 'Needs intervention' : 'Standing by'
+  const statusLabel = icon === 'loading' ? 'Working' : icon === 'error' ? 'Needs attention' : 'Waiting'
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -1002,7 +923,7 @@ function StatusCard({
           <div className="min-w-0 flex-1">
             <div className="mb-3 flex flex-wrap items-center gap-1.5 text-[10px]">
               <span className="rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 py-1 font-medium uppercase tracking-[0.16em] text-[#efefef]">
-                Torbit Runtime
+                Preview
               </span>
               <span className={`rounded-full border px-2.5 py-1 ${
                 icon === 'loading'
@@ -1024,14 +945,14 @@ function StatusCard({
 
             {detail && (
               <div className="mt-4 rounded-[20px] border border-white/[0.08] bg-black/30 p-4">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-[#6f6f6f]">Diagnostic detail</p>
+                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-[#6f6f6f]">Details</p>
                 <p className="font-mono text-[11px] leading-relaxed text-[#b0b0b0]">{detail}</p>
               </div>
             )}
 
             <div className="mt-4 flex flex-wrap gap-2 text-[11px] text-[#cfcfcf]">
-              <span className="rounded-full border border-white/[0.08] bg-black/25 px-3 py-1.5">Verified output stays in this canvas</span>
-              <span className="rounded-full border border-white/[0.08] bg-black/25 px-3 py-1.5">Runtime log captures boot and rebuild evidence</span>
+              <span className="rounded-full border border-white/[0.08] bg-black/25 px-3 py-1.5">The preview stays here while you build</span>
+              <span className="rounded-full border border-white/[0.08] bg-black/25 px-3 py-1.5">Open the log if you need more detail</span>
             </div>
 
             {actionLabel && onAction && (

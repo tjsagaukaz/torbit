@@ -30,7 +30,7 @@ export default function MobileBuilderShell({
   headerActions,
 }: MobileBuilderShellProps) {
   const [activeTab, setActiveTab] = useState<MobileBuilderTab>('chat')
-  const sessionLabel = onlineCollaboratorCount > 0 ? `${onlineCollaboratorCount + 1} online` : 'Solo session'
+  const sessionLabel = onlineCollaboratorCount > 0 ? `${onlineCollaboratorCount + 1} online` : 'Working solo'
 
   return (
     <div className="flex h-full w-full flex-col bg-[#000000]">
@@ -42,7 +42,7 @@ export default function MobileBuilderShell({
                 Torbit
               </span>
               <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2 py-1 text-cyan-100/75">
-                {isWorking ? 'Run in motion' : 'Ready'}
+                {isWorking ? 'Building now' : 'Ready'}
               </span>
               <span className="rounded-full border border-white/[0.08] bg-black/25 px-2 py-1 text-[#7b7b7b]">
                 {sessionLabel}
@@ -50,15 +50,10 @@ export default function MobileBuilderShell({
             </div>
             <p className="truncate text-[14px] font-medium tracking-[-0.02em] text-[#f5f5f5]">{workspaceTitle}</p>
             {activeAgentLabel && (
-              <p className="mt-1 truncate text-[10px] uppercase tracking-[0.14em] text-[#6c6c6c]">{activeAgentLabel} is driving the current build loop</p>
+              <p className="mt-1 truncate text-[10px] text-[#6c6c6c]">{activeAgentLabel} is working on the current build.</p>
             )}
           </div>
           <div className="flex items-center gap-1">{headerActions}</div>
-        </div>
-
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] text-[#bdbdbd]">Distinct interfaces</span>
-          <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] text-[#bdbdbd]">Runtime-verified output</span>
         </div>
 
         <div className="flex items-center rounded-2xl border border-white/[0.1] bg-white/[0.03] p-1" role="tablist" aria-label="Builder main tabs">
