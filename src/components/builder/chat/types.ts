@@ -51,6 +51,7 @@ export interface Message {
   content: string
   agentId?: string
   toolCalls?: ToolCall[]
+  statusLines?: string[]
   usage?: UsageMetrics
   /** Verified invariant proof lines shown in completion state */
   proofLines?: ProofLine[]

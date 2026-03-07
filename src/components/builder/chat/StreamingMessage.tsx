@@ -72,6 +72,7 @@ function PhaseLabel({ phase, filesComplete, totalFiles }: {
 
 export const StreamingMessage = memo(function StreamingMessage({ message, isLast, isLoading, onRetry }: StreamingMessageProps) {
   const toolCalls = useMemo(() => message.toolCalls ?? [], [message.toolCalls])
+  const statusLines = useMemo(() => message.statusLines ?? [], [message.statusLines])
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(() => {
@@ -124,6 +125,17 @@ export const StreamingMessage = memo(function StreamingMessage({ message, isLast
           filesComplete={createdCount}
           totalFiles={fileToolCalls.length}
         />
+      )}
+
+      {statusLines.length > 0 && (
+        <div className="space-y-1 py-1">
+          {statusLines.map((line, index) => (
+            <div key={`${line}-${index}`} className="flex items-center gap-2.5 pl-4 py-0.5">
+              <div className="h-[7px] w-[7px] rounded-full bg-[#2f2f2f]" />
+              <span className="text-[12px] text-[#8c8c8c]">{line}</span>
+            </div>
+          ))}
+        </div>
       )}
       
       {/* Action log - connected-line timeline for all tool calls */}

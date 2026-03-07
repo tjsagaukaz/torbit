@@ -4,6 +4,7 @@ import { getSupabase } from '@/lib/supabase/client'
 import { recordMetric } from '@/lib/metrics/success'
 import { error as logError } from '@/lib/observability/logger.client'
 import { formatSupervisorEventLine } from '@/lib/supervisor/events'
+import { getInlineSupervisorStatus } from './supervisorStatus'
 import {
   formatBuildFailureSummary,
   type BuildFailure,
@@ -67,6 +68,27 @@ export function useSupervisor(deps: UseSupervisorDeps) {
   const healAttemptCountRef = useRef(0)
   const MAX_HEAL_ATTEMPTS = 2
 
+  const appendInlineStatus = useCallback((line: string | null) => {
+    if (!line) return
+
+    setMessages((previous) => {
+      const next = [...previous]
+      const targetIndex = [...next].reverse().findIndex((message) => message.role === 'assistant')
+      if (targetIndex === -1) return previous
+
+      const resolvedIndex = next.length - 1 - targetIndex
+      const target = next[resolvedIndex]
+      const existing = target.statusLines || []
+      if (existing[existing.length - 1] === line) return previous
+
+      next[resolvedIndex] = {
+        ...target,
+        statusLines: [...existing, line].slice(-6),
+      }
+      return next
+    })
+  }, [setMessages])
+
   const handleSupervisorEvent = useCallback((event: SupervisorEvent) => {
     const intent = typeof event.details.intent === 'string'
       ? event.details.intent
@@ -88,6 +110,7 @@ export function useSupervisor(deps: UseSupervisorDeps) {
         if (previous[previous.length - 1] === line) return previous
         return [...previous, line]
       })
+      appendInlineStatus(getInlineSupervisorStatus(event))
     }
 
     if (event.event === 'run_started') {
@@ -192,7 +215,7 @@ export function useSupervisor(deps: UseSupervisorDeps) {
         recoveryAction: 'Quality checks are passing. Finalizing run.',
       })
     }
-  }, [projectId, setRunStatus, setRunStatusDetail, setRunDiagnostics])
+  }, [appendInlineStatus, projectId, setRunStatus, setRunStatusDetail, setRunDiagnostics])
 
   const autoApplyFixes = useCallback((result: SupervisorReviewResult) => {
     if (!result || result.fixes.length === 0) return
