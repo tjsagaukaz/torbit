@@ -8,7 +8,7 @@ export interface SandboxAccessTokenPayload {
   exp: number
 }
 
-const DEFAULT_TTL_SECONDS = 60 * 60 * 24 // 24h
+const DEFAULT_TTL_SECONDS = 60 * 60 // 1h
 
 function base64UrlEncode(input: string): string {
   return Buffer.from(input, 'utf8').toString('base64url')

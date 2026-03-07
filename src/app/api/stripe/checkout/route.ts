@@ -52,7 +52,10 @@ export const POST = withAuth(async (request, { user }) => {
     }
 
     // 3. Build checkout session based on mode
-    const origin = request.headers.get('origin') || 'http://localhost:3000'
+    // Derive origin from the request URL (set by Next.js) instead of trusting
+    // the Origin header, which can be spoofed by an attacker.
+    const reqUrl = new URL(request.url)
+    const origin = reqUrl.origin
     const successUrl = `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${origin}/dashboard?checkout=canceled`
 

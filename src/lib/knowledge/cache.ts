@@ -50,7 +50,7 @@ export function isDomainCacheStale(domain: string, maxAge?: number): boolean {
   const oldestFact = facts.reduce((oldest, fact) => {
     const factTime = new Date(fact.detectedAt).getTime()
     return factTime < oldest ? factTime : oldest
-  }, Date.now())
+  }, Infinity)
   
   return (Date.now() - oldestFact) > ttl
 }

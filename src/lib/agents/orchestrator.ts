@@ -204,6 +204,11 @@ function hasProviderBackoff(provider: ModelCandidate['provider'], now = Date.now
 
 function setProviderBackoff(provider: ModelCandidate['provider'], durationMs = PROVIDER_BILLING_BACKOFF_MS): void {
   providerBackoffUntil.set(provider, Date.now() + durationMs)
+  // Evict expired entries to prevent unbounded growth
+  const now = Date.now()
+  for (const [key, until] of providerBackoffUntil) {
+    if (until <= now) providerBackoffUntil.delete(key)
+  }
 }
 
 function isBillingOrQuotaFailure(error: unknown): boolean {

@@ -1,7 +1,20 @@
+import { timingSafeEqual } from 'crypto'
+
 function normalizeToken(value: string | null | undefined): string | null {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : null
+}
+
+function timingSafeTokenMatch(candidate: string, tokens: string[]): boolean {
+  const candidateBuf = Buffer.from(candidate)
+  for (const token of tokens) {
+    const tokenBuf = Buffer.from(token)
+    if (candidateBuf.length === tokenBuf.length && timingSafeEqual(candidateBuf, tokenBuf)) {
+      return true
+    }
+  }
+  return false
 }
 
 export function parseBearerToken(authorizationHeader: string | null | undefined): string | null {
@@ -46,14 +59,14 @@ export function authorizeWorkerRequest(
     }
   }
 
-  if (headerToken && configuredTokens.includes(headerToken)) {
+  if (headerToken && timingSafeTokenMatch(headerToken, configuredTokens)) {
     return {
       ok: true,
       method: 'header-token',
     }
   }
 
-  if (bearerToken && configuredTokens.includes(bearerToken)) {
+  if (bearerToken && timingSafeTokenMatch(bearerToken, configuredTokens)) {
     return {
       ok: true,
       method: 'bearer-token',

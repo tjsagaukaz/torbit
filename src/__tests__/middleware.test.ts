@@ -26,8 +26,8 @@ describe('Middleware', () => {
       const requestWithoutCookies = new NextRequest('http://localhost:3000/')
       
       // Import and call middleware
-      const { proxy } = await import('../proxy')
-      await proxy(requestWithoutCookies)
+      const { middleware } = await import('../middleware')
+      await middleware(requestWithoutCookies)
       
       // Should NOT call updateSession when no auth cookies
       expect(updateSession).not.toHaveBeenCalled()
@@ -43,8 +43,8 @@ describe('Middleware', () => {
         },
       })
       
-      const { proxy } = await import('../proxy')
-      await proxy(requestWithCookies)
+      const { middleware } = await import('../middleware')
+      await middleware(requestWithCookies)
       
       // Should call updateSession when auth cookies present
       expect(updateSession).toHaveBeenCalled()
@@ -59,8 +59,8 @@ describe('Middleware', () => {
         },
       })
 
-      const { proxy } = await import('../proxy')
-      const response = await proxy(request)
+      const { middleware } = await import('../middleware')
+      const response = await middleware(request)
 
       expect(response.status).not.toBe(307)
     })
@@ -68,8 +68,8 @@ describe('Middleware', () => {
     it('should allow unauthenticated users to access /login', async () => {
       const request = new NextRequest('http://localhost:3000/login')
 
-      const { proxy } = await import('../proxy')
-      const response = await proxy(request)
+      const { middleware } = await import('../middleware')
+      const response = await middleware(request)
 
       expect(response.status).not.toBe(307)
     })
@@ -79,8 +79,8 @@ describe('Middleware', () => {
     it('should redirect unauthenticated users away from /builder', async () => {
       const request = new NextRequest('http://localhost:3000/builder')
 
-      const { proxy } = await import('../proxy')
-      const response = await proxy(request)
+      const { middleware } = await import('../middleware')
+      const response = await middleware(request)
 
       expect(response.status).toBe(307)
       expect(response.headers.get('location')).toContain('/login')
@@ -94,8 +94,8 @@ describe('Middleware', () => {
         },
       })
 
-      const { proxy } = await import('../proxy')
-      const response = await proxy(request)
+      const { middleware } = await import('../middleware')
+      const response = await middleware(request)
 
       expect(response.status).not.toBe(307)
     })
@@ -115,8 +115,8 @@ describe('Middleware', () => {
           headers: { cookie },
         })
         
-        const { proxy } = await import('../proxy')
-        const response = await proxy(request)
+        const { middleware } = await import('../middleware')
+        const response = await middleware(request)
         
         // Should not redirect from login, but session refresh should run.
         expect(response.status).not.toBe(307)
@@ -137,8 +137,8 @@ describe('Middleware', () => {
           headers: { cookie },
         })
         
-        const { proxy } = await import('../proxy')
-        const response = await proxy(request)
+        const { middleware } = await import('../middleware')
+        const response = await middleware(request)
         
         // Should not redirect (no auth cookie)
         expect(response.status).not.toBe(307)
@@ -152,8 +152,8 @@ describe('Middleware', () => {
         },
       })
 
-      const { proxy } = await import('../proxy')
-      const response = await proxy(request)
+      const { middleware } = await import('../middleware')
+      const response = await middleware(request)
 
       // No real auth cookie present, so protected route should redirect to login.
       expect(response.status).toBe(307)
@@ -174,8 +174,8 @@ describe('Middleware', () => {
           headers: { cookie },
         })
 
-        const { proxy } = await import('../proxy')
-        const response = await proxy(request)
+        const { middleware } = await import('../middleware')
+        const response = await middleware(request)
 
         expect(response.status).not.toBe(307)
       }
@@ -190,8 +190,8 @@ describe('Middleware', () => {
           headers: { cookie: 'torbit_e2e_auth=1' },
         })
 
-        const { proxy } = await import('../proxy')
-        const response = await proxy(request)
+        const { middleware } = await import('../middleware')
+        const response = await middleware(request)
 
         expect(response.status).not.toBe(307)
       } finally {

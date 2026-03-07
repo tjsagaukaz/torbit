@@ -32,7 +32,9 @@ export const POST = withAuth(async (request, { user }) => {
 
     // 2. Create portal session
     const stripe = getStripe()
-    const origin = request.headers.get('origin') || 'http://localhost:3000'
+    // Derive origin from the request URL (set by Next.js) instead of trusting
+    // the Origin header, which can be spoofed by an attacker.
+    const origin = new URL(request.url).origin
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerRecord.stripe_customer_id,
