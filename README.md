@@ -130,7 +130,7 @@ Responsive layout: 3-column on desktop, tabbed mobile shell on smaller screens.
 ### Setup
 
 ```bash
-git clone https://github.com/RedBackRubbish/torbit.git
+git clone https://github.com/tjsagaukaz/torbit.git
 cd torbit
 pnpm install
 cp .env.example .env
