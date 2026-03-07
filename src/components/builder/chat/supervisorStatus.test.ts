@@ -16,9 +16,14 @@ function makeEvent(event: SupervisorEvent['event'], stage: string, success = tru
 describe('getInlineSupervisorStatus', () => {
   it('maps early build phases to plain language', () => {
     expect(getInlineSupervisorStatus(makeEvent('run_started', 'run'))).toBe('🤝 I’m on it and getting the build moving.')
-    expect(getInlineSupervisorStatus(makeEvent('route_selected', 'routing'))).toBe('🧭 Lining up the best first pass.')
+    expect(getInlineSupervisorStatus({
+      ...makeEvent('route_selected', 'routing'),
+      details: { route: 'fast_build_lane' },
+    })).toBe('⚡ Taking the fast build lane so I can start working sooner.')
     expect(getInlineSupervisorStatus(makeEvent('gate_started', 'vibe_audit'))).toBe('👀 Checking the current project before I touch files.')
     expect(getInlineSupervisorStatus(makeEvent('gate_started', 'brief'))).toBe('🧩 Packing your request, context, and rules into the build brief.')
+    expect(getInlineSupervisorStatus(makeEvent('gate_started', 'planning'))).toBe('🧠 Laying out the build plan.')
+    expect(getInlineSupervisorStatus(makeEvent('gate_started', 'implementation'))).toBe('🛠️ Starting the first file changes.')
     expect(getInlineSupervisorStatus(makeEvent('gate_started', 'execution'))).toBe('🛠️ Handing the build brief to the builder.')
   })
 

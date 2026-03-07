@@ -276,7 +276,7 @@ export default function ChatPanel() {
         }
       }
 
-      const STREAM_IDLE_TIMEOUT_MS = 4 * 60 * 1000
+      const STREAM_IDLE_TIMEOUT_MS = 90 * 1000
       const resetStreamTimeout = () => {
         if (timeoutId) clearTimeout(timeoutId)
         timeoutId = setTimeout(() => controller.abort(), STREAM_IDLE_TIMEOUT_MS)
@@ -383,7 +383,7 @@ export default function ChatPanel() {
       setRunStatus('Needs Input')
       generationSound.onError()
       const errorMessage = error instanceof Error && error.name === 'AbortError'
-        ? 'Request timed out. Please try again.'
+        ? 'Torbit stopped hearing back from the builder. Please try again.'
         : (error instanceof Error ? error.message : 'Unknown error')
       setRunStatusDetail(errorMessage)
       setRunDiagnostics((previous) => ({

@@ -62,6 +62,20 @@ function getPhaseHeadline(phase: GenerationPhase): string {
   }
 }
 
+function getWaitingHeadline(phase: GenerationPhase, elapsedSeconds: number): string | null {
+  if (elapsedSeconds >= 90) {
+    return '⏳ Still waiting on the builder to start file changes'
+  }
+
+  if (elapsedSeconds >= 45) {
+    return phase === 'thinking'
+      ? '⏳ Still reviewing the request'
+      : '⏳ Still lining up the next build step'
+  }
+
+  return null
+}
+
 function getLiveStatusDetail(input: {
   phase: GenerationPhase
   hasToolCalls: boolean
@@ -179,7 +193,7 @@ export const StreamingMessage = memo(function StreamingMessage({
 
   const liveHeadline = activeToolCall
     ? getToolCallHeadline(activeToolCall)
-    : statusLines[statusLines.length - 1] || getPhaseHeadline(phase)
+    : getWaitingHeadline(phase, elapsedSeconds) || statusLines[statusLines.length - 1] || getPhaseHeadline(phase)
 
   const liveDetail = activeToolCall
     ? getToolCallDetail(activeToolCall)

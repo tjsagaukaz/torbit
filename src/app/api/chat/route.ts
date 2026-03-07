@@ -31,6 +31,7 @@ import { PLANNER_SYSTEM_PROMPT } from '@/lib/agents/prompts/planner'
 import { STRATEGIST_SYSTEM_PROMPT } from '@/lib/agents/prompts/strategist'
 import { GOD_PROMPT } from '@/lib/agents/prompts/god-prompt'
 import { buildTorbitBuildContract, formatWorkspaceSnapshot, type WorkspaceFileManifest } from '@/lib/agents/build-contract'
+import { selectExecutionStrategy, type ExecutionStrategy } from '@/lib/chat/executionStrategy'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -182,6 +183,7 @@ interface ExecutionOptions {
   userId: string
   systemPrompt: string
   runId: string
+  strategy: ExecutionStrategy
   sendChunk: (chunk: StreamChunk) => void
   emitSupervisor: (
     event: Parameters<typeof makeSupervisorEvent>[0]['event'],
@@ -526,15 +528,14 @@ function sanitizeLastUserMessage(messages: Array<{ role: 'system' | 'user' | 'as
 
 async function executeActionFlow(input: ExecutionOptions): Promise<AgentResult> {
   const seenToolCalls = new Set<string>()
+  const orchestrator = createOrchestrator({
+    projectId: input.projectId,
+    userId: input.userId,
+  })
 
-  const runExecution = async (mode: 'primary' | 'fallback'): Promise<AgentResult> => {
-    const orchestrator = createOrchestrator({
-      projectId: input.projectId,
-      userId: input.userId,
-    })
-
+  const createExecutionHooks = () => {
     const options = {
-      maxSteps: mode === 'primary' ? 15 : 10,
+      maxSteps: 15,
       maxTokens: MAX_OUTPUT_TOKENS,
       systemPrompt: input.systemPrompt,
       messages: input.messages,
@@ -562,21 +563,91 @@ async function executeActionFlow(input: ExecutionOptions): Promise<AgentResult> 
         })
       },
     }
+    return options
+  }
 
-    if (mode === 'primary') {
-      return orchestrator.executeWorldClassFlow(input.agentId, getLastUserMessage(input.messages), options)
+  const runExecution = async (mode: 'primary' | 'fallback'): Promise<AgentResult> => {
+    const options = createExecutionHooks()
+
+    if (input.strategy === 'fast_lane' && mode === 'primary') {
+      input.emitSupervisor('gate_started', 'implementation', 'Fast build lane started. Moving straight into file changes.', {
+        strategy: input.strategy,
+        mode,
+      })
+
+      const fastResult = await orchestrator.executeAgent(
+        input.agentId,
+        getLastUserMessage(input.messages),
+        {
+          modelRole: 'worker',
+          maxSteps: 12,
+          maxTokens: options.maxTokens,
+          messages: options.messages,
+          systemPrompt: options.systemPrompt,
+          onTextDelta: options.onTextDelta,
+          onToolCall: options.onToolCall,
+          onToolResult: options.onToolResult,
+        }
+      )
+
+      if (fastResult.success) {
+        input.emitSupervisor('gate_passed', 'implementation', 'Fast build lane finished cleanly.', {
+          strategy: input.strategy,
+          tool_calls: fastResult.toolCalls.length,
+        })
+        return fastResult
+      }
+
+      input.emitSupervisor('gate_failed', 'implementation', 'Fast build lane hit an issue.', {
+        strategy: input.strategy,
+        error: fastResult.output || 'fast execution failed',
+      })
+
+      input.emitSupervisor('fallback_invoked', 'planning', 'Fast lane hit a snag. Switching to a deeper planning pass.', {
+        reason: fastResult.output || 'fast execution failed',
+        chosen_replacement: 'world_class_orchestration',
+        strategy: 'deep_plan_fallback',
+      })
     }
 
-    return orchestrator.executeAgent(input.agentId, getLastUserMessage(input.messages), {
-      modelRole: 'worker',
-      modelTier: 'sonnet',
-      maxSteps: options.maxSteps,
+    input.emitSupervisor('gate_started', 'planning', 'Laying out the build plan.', {
+      strategy: input.strategy,
+      mode,
+    })
+
+    const worldClassOptions = {
+      maxSteps: mode === 'primary' ? 15 : 10,
       maxTokens: options.maxTokens,
       messages: options.messages,
       systemPrompt: options.systemPrompt,
       onTextDelta: options.onTextDelta,
       onToolCall: options.onToolCall,
       onToolResult: options.onToolResult,
+    }
+
+    input.emitSupervisor('gate_passed', 'planning', 'Plan is ready. Handing it to the builder.', {
+      strategy: input.strategy,
+      mode,
+    })
+
+    if (mode === 'primary') {
+      return orchestrator.executeWorldClassFlow(
+        input.agentId,
+        getLastUserMessage(input.messages),
+        worldClassOptions
+      )
+    }
+
+    return orchestrator.executeAgent(input.agentId, getLastUserMessage(input.messages), {
+      modelRole: 'worker',
+      modelTier: 'sonnet',
+      maxSteps: worldClassOptions.maxSteps,
+      maxTokens: worldClassOptions.maxTokens,
+      messages: worldClassOptions.messages,
+      systemPrompt: worldClassOptions.systemPrompt,
+      onTextDelta: worldClassOptions.onTextDelta,
+      onToolCall: worldClassOptions.onToolCall,
+      onToolResult: worldClassOptions.onToolResult,
     })
   }
 
@@ -716,6 +787,11 @@ const authedChatHandler = withAuth(async (req, { user }) => {
   const intentMode: IntentMode = parsedBody.intentMode || 'auto'
   const intent = resolveIntent(userPrompt, intentMode)
   const actionIntent = isActionIntent(intent)
+  const executionStrategy = selectExecutionStrategy({
+    agentId: requestedAgentId,
+    userPrompt,
+    fileCount: parsedBody.fileManifest?.totalFiles,
+  })
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -882,12 +958,21 @@ const authedChatHandler = withAuth(async (req, { user }) => {
           action: true,
         })
 
-        emitSupervisor('route_selected', 'routing', 'Route selected for actionable intent.', {
-          route: 'world_class_orchestration',
-          context: 'workspace-aware execution brief',
-          supervision: 'risk-aware run control',
+        emitSupervisor('route_selected', 'routing', executionStrategy.strategy === 'fast_lane'
+          ? 'Fast build lane selected for an interactive request.'
+          : 'Deep build lane selected for a higher-risk request.', {
+          route: executionStrategy.strategy === 'fast_lane' ? 'fast_build_lane' : 'world_class_orchestration',
+          reason: executionStrategy.reason,
+          context: executionStrategy.strategy === 'fast_lane'
+            ? 'direct worker execution with streamed file activity'
+            : 'workspace-aware execution brief',
+          supervision: executionStrategy.strategy === 'fast_lane'
+            ? 'lightweight run control'
+            : 'risk-aware run control',
           builder: 'implementation worker chain',
-          verification: 'quality gate and cleanup pass',
+          verification: executionStrategy.strategy === 'fast_lane'
+            ? 'follow-up verification after file changes'
+            : 'quality gate and cleanup pass',
         })
 
         let guardrailPrompt = ''
@@ -1034,6 +1119,7 @@ const authedChatHandler = withAuth(async (req, { user }) => {
           userId: user.id,
           systemPrompt,
           runId,
+          strategy: executionStrategy.strategy,
           sendChunk,
           emitSupervisor,
         })
