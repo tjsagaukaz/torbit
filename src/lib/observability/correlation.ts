@@ -7,7 +7,7 @@ export function createCorrelationId() {
   return `cid-${randomUUID()}`
 }
 
-export function runWithCorrelation(id: string, fn: (...args: any[]) => any) {
+export function runWithCorrelation<TArgs extends unknown[], TResult>(id: string, fn: (...args: TArgs) => TResult) {
   return als.run({ correlationId: id }, fn)
 }
 

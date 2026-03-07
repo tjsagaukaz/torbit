@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { error as logError } from '@/lib/observability/logger.server'
 import type { 
   FuelBalance, 
   Subscription, 
@@ -199,7 +200,10 @@ export async function checkAndProcessDailyRefill(userId: string): Promise<{
 
   if (eligibilityError || !eligibility?.[0]) {
     if (error) {
-      console.error('Daily refill check failed:', error)
+      logError('billing.daily_refill_check_failed', {
+        userId,
+        message: error.message,
+      })
     }
     return { refilled: false }
   }
@@ -219,7 +223,10 @@ export async function checkAndProcessDailyRefill(userId: string): Promise<{
   })
 
   if (refillError) {
-    console.error('Daily refill failed:', refillError)
+    logError('billing.daily_refill_failed', {
+      userId,
+      message: refillError.message,
+    })
     return { refilled: false }
   }
 

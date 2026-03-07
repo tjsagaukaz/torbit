@@ -7,6 +7,7 @@ import { TorbitSpinner } from '@/components/ui/TorbitLogo'
 import { useEscapeToClose } from '@/hooks/useEscapeToClose'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { error as logError } from '@/lib/observability/logger.client'
 
 /**
  * RefuelModal - The "Refueling Station"
@@ -140,7 +141,10 @@ export default function RefuelModal({ open, onOpenChange }: RefuelModalProps) {
         window.location.href = `https://checkout.stripe.com/pay/${data.sessionId}`
       }
     } catch (err) {
-      console.error('Purchase error:', err)
+      logError('builder.refuel.purchase_failed', {
+        packId: pack.id,
+        message: err instanceof Error ? err.message : 'Purchase failed',
+      })
       setError(err instanceof Error ? err.message : 'Purchase failed')
       setIsProcessing(false)
       setSelectedPack(null)

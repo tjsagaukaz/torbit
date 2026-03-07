@@ -22,6 +22,7 @@ import { TorbitSpinner } from '@/components/ui/TorbitLogo'
 import { useEscapeToClose } from '@/hooks/useEscapeToClose'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { error as logError } from '@/lib/observability/logger.client'
 import {
   SCREENSHOT_DEVICES,
   DEFAULT_SCREENSHOT_DEVICE,
@@ -135,7 +136,10 @@ export function ScreenshotPanel({ isOpen, onClose, previewRef }: ScreenshotPanel
             idx === i ? { ...s, dataUrl, status: 'complete' } : s
           ))
         } catch (err) {
-          console.error('Screenshot capture failed:', err)
+          logError('builder.screenshots.capture_failed', {
+            route: newScreenshots[i]?.route,
+            message: err instanceof Error ? err.message : 'Capture failed',
+          })
           setScreenshots(prev => prev.map((s, idx) => 
             idx === i ? { 
               ...s, 
@@ -148,7 +152,9 @@ export function ScreenshotPanel({ isOpen, onClose, previewRef }: ScreenshotPanel
       
       setStatus('complete')
     } catch (err) {
-      console.error('Screenshot generation failed:', err)
+      logError('builder.screenshots.generation_failed', {
+        message: err instanceof Error ? err.message : 'Generation failed',
+      })
       setError(err instanceof Error ? err.message : 'Generation failed')
       setStatus('error')
     }
@@ -171,7 +177,9 @@ export function ScreenshotPanel({ isOpen, onClose, previewRef }: ScreenshotPanel
       const blob = await generateScreenshotZip(bundle)
       downloadScreenshotBlob(blob, projectName || 'MyApp')
     } catch (err) {
-      console.error('Download failed:', err)
+      logError('builder.screenshots.download_failed', {
+        message: err instanceof Error ? err.message : 'Download failed',
+      })
       setError(err instanceof Error ? err.message : 'Download failed')
     }
   }, [screenshots, selectedDevice, projectName])

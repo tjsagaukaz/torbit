@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Loader2, ShieldCheck, Copy, CheckCheck } from 'lucide-react'
 import { MarkdownRenderer } from './MarkdownRenderer'
@@ -70,7 +70,7 @@ function PhaseLabel({ phase, filesComplete, totalFiles }: {
   )
 }
 
-export function StreamingMessage({ message, isLast, isLoading, onRetry }: StreamingMessageProps) {
+export const StreamingMessage = memo(function StreamingMessage({ message, isLast, isLoading, onRetry }: StreamingMessageProps) {
   const toolCalls = useMemo(() => message.toolCalls ?? [], [message.toolCalls])
   const [copied, setCopied] = useState(false)
 
@@ -233,6 +233,6 @@ export function StreamingMessage({ message, isLast, isLoading, onRetry }: Stream
       )}
     </motion.div>
   )
-}
+})
 
 export type { GenerationPhase }

@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react'
 import { useStreamingExecution, deriveUIState } from '@/hooks/useStreamingExecution'
 import { useExecutionState } from '@/hooks/useExecutionState'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { error as logError, info as logInfo } from '@/lib/observability/logger.client'
 
 /**
  * Example component demonstrating proper React patterns:
@@ -34,23 +35,23 @@ export function ExecutionPanel({
     userId,
     agentId: 'executor-agent',
     onExecutionStart: (runId) => {
-      console.log(`Execution started: ${runId}`)
+      logInfo('builder.execution.started', { runId })
     },
     onExecutionComplete: (record) => {
-      console.log(`Execution recorded to ledger:`, record)
+      logInfo('builder.execution.recorded', { record })
     },
   })
 
   // Streaming for real-time output
   const streaming = useStreamingExecution({
     onChunk: (chunk) => {
-      console.log('Received chunk:', chunk)
+      logInfo('builder.execution.chunk_received', { chunk })
     },
     onComplete: () => {
-      console.log('Stream completed')
+      logInfo('builder.execution.stream_completed')
     },
     onError: (error) => {
-      console.error('Stream error:', error.message)
+      logError('builder.execution.stream_failed', { message: error.message })
     },
   })
 

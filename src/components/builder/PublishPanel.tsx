@@ -37,6 +37,7 @@ import { GovernanceResolved } from './governance'
 import { TrustLayerCard } from '@/components/governance/TrustLayerCard'
 import { TorbitSpinner } from '@/components/ui/TorbitLogo'
 import { recordMetric } from '@/lib/metrics/success'
+import { error as logError } from '@/lib/observability/logger.client'
 import { useGovernanceStore } from '@/store/governance'
 import { readApiErrorMessage } from '@/lib/api/error-envelope'
 
@@ -904,7 +905,9 @@ export function PublishPanel() {
       setValidationResult(validation)
       setStatus('preflight')
     } catch (err) {
-      console.error('Validation failed:', err)
+      logError('builder.publish.validation_failed', {
+        message: err instanceof Error ? err.message : 'Validation failed',
+      })
       setStatus('error')
       setError(err instanceof Error ? err.message : 'Validation failed')
     }
@@ -927,7 +930,10 @@ export function PublishPanel() {
     try {
       await runSelectedAction(selectedAction)
     } catch (err) {
-      console.error('Mobile publish failed:', err)
+      logError('builder.publish.run_failed', {
+        action: selectedAction,
+        message: err instanceof Error ? err.message : 'Pipeline failed',
+      })
       setStatus('error')
       setError(err instanceof Error ? err.message : 'Pipeline failed')
     }
@@ -941,7 +947,10 @@ export function PublishPanel() {
     try {
       await runSelectedAction(result.action)
     } catch (err) {
-      console.error('Retry failed:', err)
+      logError('builder.publish.retry_failed', {
+        action: result.action,
+        message: err instanceof Error ? err.message : 'Retry failed',
+      })
       setStatus('error')
       setError(err instanceof Error ? err.message : 'Retry failed')
     }

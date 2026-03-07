@@ -68,6 +68,8 @@ function BuilderPageContent() {
     toggleSidebar,
     agents,
     isGenerating,
+    projectType,
+    files,
   } = useBuilderStore()
 
   const { members, upsertPresence } = useProjectPresence(projectId)
@@ -156,6 +158,7 @@ function BuilderPageContent() {
   const activeAgent = agents.find((agent) => agent.status === 'working' || agent.status === 'thinking')
   const isWorking = isGenerating || Boolean(activeAgent)
   const projectToken = projectId ? projectId.slice(0, 8) : 'session'
+  const missionLabel = projectType === 'mobile' ? 'iOS Product Foundry' : 'Launch-grade Web Foundry'
   const workspaceTitle = useMemo(() => {
     const normalizedPrompt = prompt.replace(/\s+/g, ' ').trim()
     if (!normalizedPrompt) return 'Start with a clear build objective'
@@ -165,7 +168,15 @@ function BuilderPageContent() {
     ? `${onlineCollaboratorCount + 1} online`
     : 'Solo session'
   const statusLabel = isWorking ? 'Run in motion' : 'Ready to build'
-  const statusDetail = activeAgent?.currentTask || (isWorking ? `${activeAgent?.name || 'Torbit'} is executing` : 'Waiting for your next direction')
+  const statusDetail = activeAgent?.currentTask || (isWorking
+    ? 'Torbit is composing, wiring, and verifying the workspace.'
+    : 'Describe the product, the standard, and the differentiator.')
+  const qualitySignals = useMemo(() => ([
+    'Launch-grade defaults',
+    projectType === 'mobile' ? 'Expo-router discipline' : 'Production web architecture',
+    'Taste-adaptive iteration',
+    isWorking ? 'Live runtime verification' : 'Ready for governed generation',
+  ]), [isWorking, projectType])
 
   const chatPanel = (
     <ErrorBoundary name="ChatPanel" fallback={<ChatErrorFallback onRetry={handleChatRetry} />}>
@@ -244,7 +255,7 @@ function BuilderPageContent() {
           onPreviewTabChange={setPreviewTab}
           isWorking={isWorking}
           workspaceTitle={workspaceTitle}
-          activeAgentLabel={activeAgent?.name ?? null}
+          activeAgentLabel={isWorking ? 'Torbit' : null}
           onlineCollaboratorCount={onlineCollaboratorCount}
           headerActions={(
             <>
@@ -279,97 +290,135 @@ function BuilderPageContent() {
       {chatPanel}
 
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <header className="relative border-b border-white/[0.08] bg-[#070707]/95 backdrop-blur-sm">
+        <header className="relative border-b border-white/[0.08] bg-[#050505]/95 backdrop-blur-xl">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-5 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.16] to-transparent" />
 
-          <div className="flex h-11 items-center justify-between gap-3 px-3 sm:px-4">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1">
-                {isWorking ? <TorbitSpinner size="xs" speed="fast" /> : <span className="h-1.5 w-1.5 rounded-full bg-[#3c3c3c]" />}
-                <span className="text-[11px] font-medium text-[#e5e5e5]">{statusLabel}</span>
-              </div>
-              <div className="hidden min-w-0 items-center gap-1.5 text-[11px] text-[#8b8b8b] xl:flex">
-                <span className="truncate">{statusDetail}</span>
-                <span className="text-[#505050]">•</span>
-                <span>{collaboratorLabel}</span>
-              </div>
-            </div>
-
-            <div className="relative z-0 ml-auto flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
-              <Link
-                href="/dashboard"
-                aria-label="Go to dashboard"
-                className="flex h-7 w-7 items-center justify-center rounded-md text-[#676767] transition-all hover:bg-white/[0.05] hover:text-[#fafafa] focus-ring"
-                title="Dashboard"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-                  />
-                </svg>
-              </Link>
-              <div className="hidden sm:block">
-                <ScreenshotButton />
-              </div>
-              <div className="hidden lg:block">
-                <SoundToggle />
-              </div>
-              <FuelGauge />
-              <ShipMenu />
-              <PublishPanel />
-              <UserMenu />
-            </div>
-          </div>
-
-          <div className="flex h-10 items-center justify-between gap-2 border-t border-white/[0.06] px-3 sm:px-4">
+          <div className="grid gap-3 px-4 py-3 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.95fr)]">
             <div className="min-w-0">
-              <p className="truncate text-[12px] font-medium text-[#f5f5f5]">{workspaceTitle}</p>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-[#707070]">Workspace {projectToken}</p>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="flex items-center rounded-lg border border-white/[0.09] bg-white/[0.03] p-0.5">
-                <PreviewModeButton
-                  label="Preview"
-                  shortcut="⌘1"
-                  active={previewTab === 'preview'}
-                  onClick={() => setPreviewTab('preview')}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.007-9.963-7.178z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </PreviewModeButton>
-                <PreviewModeButton
-                  label="Code"
-                  shortcut="⌘2"
-                  active={previewTab === 'code'}
-                  onClick={() => setPreviewTab('code')}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                  </svg>
-                </PreviewModeButton>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-white/[0.12] bg-white/[0.05] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-[#dedede]">
+                  Torbit Mission Control
+                </span>
+                <span className="rounded-full border border-cyan-400/15 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-medium text-cyan-200/80">
+                  {missionLabel}
+                </span>
+                <span className="rounded-full border border-white/[0.08] bg-black/30 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-[#767676]">
+                  Workspace {projectToken}
+                </span>
               </div>
 
-              <button
-                onClick={() => setShowTasks((value) => !value)}
-                className={`flex h-8 items-center gap-2 rounded-lg border px-2.5 transition-all focus-ring ${
-                  showTasks
-                    ? 'border-white/[0.2] bg-white/[0.1] text-[#f8f8f8]'
-                    : 'border-white/[0.09] bg-white/[0.02] text-[#8d8d8d] hover:border-white/[0.14] hover:text-[#d0d0d0]'
-                }`}
-                title="Tasks (T)"
-                aria-label={showTasks ? 'Close tasks panel' : 'Open tasks panel'}
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-[11px] font-medium">Tasks</span>
-                <span className="hidden text-[10px] text-[#7a7a7a] md:inline">T</span>
-              </button>
+              <div className="min-w-0">
+                <p className="truncate text-[18px] font-semibold tracking-[-0.02em] text-[#f5f5f5] sm:text-[22px]">
+                  {workspaceTitle}
+                </p>
+                <p className="mt-1 max-w-3xl text-[11px] leading-relaxed text-[#8c8c8c] sm:text-[12px]">
+                  Torbit compiles intent, repo structure, runtime telemetry, governance rules, and taste memory into one
+                  controlled build loop. The objective is production-grade work, not demo-grade output.
+                </p>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {qualitySignals.map((signal) => (
+                  <span
+                    key={signal}
+                    className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[10px] font-medium text-[#bababa]"
+                  >
+                    {signal}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <HeaderMetric
+                  label="Run State"
+                  value={statusLabel}
+                  detail={statusDetail}
+                  emphasis={isWorking ? 'active' : 'default'}
+                  leading={isWorking ? <TorbitSpinner size="xs" speed="fast" /> : <span className="h-2 w-2 rounded-full bg-[#4a4a4a]" />}
+                />
+                <HeaderMetric
+                  label="Collaboration"
+                  value={collaboratorLabel}
+                  detail={onlineCollaboratorCount > 0 ? 'Live presence detected' : 'Private focus session'}
+                />
+                <HeaderMetric
+                  label="Artifacts"
+                  value={`${files.length}`}
+                  detail={files.length > 0 ? 'Tracked files in workspace' : 'No generated assets yet'}
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center rounded-2xl border border-white/[0.09] bg-white/[0.04] p-1">
+                  <PreviewModeButton
+                    label="Preview"
+                    shortcut="⌘1"
+                    active={previewTab === 'preview'}
+                    onClick={() => setPreviewTab('preview')}
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </PreviewModeButton>
+                  <PreviewModeButton
+                    label="Code"
+                    shortcut="⌘2"
+                    active={previewTab === 'code'}
+                    onClick={() => setPreviewTab('code')}
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                    </svg>
+                  </PreviewModeButton>
+                </div>
+
+                <div className="relative z-0 flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                  <button
+                    onClick={() => setShowTasks((value) => !value)}
+                    className={`flex h-9 items-center gap-2 rounded-xl border px-3 transition-all focus-ring ${
+                      showTasks
+                        ? 'border-white/[0.2] bg-white/[0.1] text-[#f8f8f8]'
+                        : 'border-white/[0.09] bg-white/[0.03] text-[#8d8d8d] hover:border-white/[0.14] hover:text-[#d0d0d0]'
+                    }`}
+                    title="Tasks (T)"
+                    aria-label={showTasks ? 'Close tasks panel' : 'Open tasks panel'}
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-[11px] font-medium">Ops</span>
+                    <span className="hidden text-[10px] text-[#7a7a7a] md:inline">T</span>
+                  </button>
+                  <Link
+                    href="/dashboard"
+                    aria-label="Go to dashboard"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.09] bg-white/[0.03] text-[#676767] transition-all hover:border-white/[0.15] hover:bg-white/[0.05] hover:text-[#fafafa] focus-ring"
+                    title="Dashboard"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+                      />
+                    </svg>
+                  </Link>
+                  <div className="hidden sm:block">
+                    <ScreenshotButton />
+                  </div>
+                  <div className="hidden lg:block">
+                    <SoundToggle />
+                  </div>
+                  <FuelGauge />
+                  <ShipMenu />
+                  <PublishPanel />
+                  <UserMenu />
+                </div>
+              </div>
             </div>
           </div>
         </header>
@@ -436,9 +485,9 @@ function PreviewModeButton({
       onClick={onClick}
       aria-label={label}
       aria-pressed={active}
-      className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 transition-all ${
+      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 transition-all ${
         active
-          ? 'bg-white/[0.12] text-[#fafafa]'
+          ? 'bg-white/[0.12] text-[#fafafa] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]'
           : 'text-[#727272] hover:bg-white/[0.06] hover:text-[#d6d6d6]'
       }`}
     >
@@ -446,5 +495,36 @@ function PreviewModeButton({
       <span className="text-[11px] font-medium">{label}</span>
       <span className="hidden text-[10px] text-[#6c6c6c] lg:inline">{shortcut}</span>
     </button>
+  )
+}
+
+function HeaderMetric({
+  label,
+  value,
+  detail,
+  leading,
+  emphasis = 'default',
+}: {
+  label: string
+  value: string
+  detail: string
+  leading?: ReactNode
+  emphasis?: 'default' | 'active'
+}) {
+  return (
+    <div
+      className={`rounded-2xl border px-3 py-2.5 ${
+        emphasis === 'active'
+          ? 'border-emerald-500/20 bg-emerald-500/[0.08]'
+          : 'border-white/[0.08] bg-white/[0.035]'
+      }`}
+    >
+      <div className="mb-1.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-[#727272]">
+        {leading}
+        <span>{label}</span>
+      </div>
+      <p className="truncate text-[12px] font-medium text-[#f2f2f2]">{value}</p>
+      <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-[#808080]">{detail}</p>
+    </div>
   )
 }

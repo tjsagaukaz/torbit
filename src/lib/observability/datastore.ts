@@ -18,6 +18,6 @@ export function readLogs() {
   if (!fs.existsSync(LOG_FILE)) return []
   const content = fs.readFileSync(LOG_FILE, 'utf8')
   return content.split('\n').filter(Boolean).map(l => {
-    try { return JSON.parse(l) } catch (e) { return { raw: l } }
+    try { return JSON.parse(l) } catch { return { raw: l } }
   })
 }

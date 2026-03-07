@@ -44,7 +44,7 @@ export function ProjectTypeSelector({ compact = false }: ProjectTypeSelectorProp
   if (compact) {
     return (
       <div 
-        className="flex items-center gap-1 bg-[#141414] rounded-lg p-0.5"
+        className="grid grid-cols-2 gap-1 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-1"
         role="radiogroup"
         aria-label="Project type selector"
       >
@@ -56,17 +56,27 @@ export function ProjectTypeSelector({ compact = false }: ProjectTypeSelectorProp
             aria-checked={projectType === option.type}
             aria-label={`${option.name}: ${option.description}`}
             className={`
-              flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all
+              flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[11px] font-medium transition-all
               ${projectType === option.type
-                ? 'bg-[#1f1f1f] text-white'
-                : 'text-[#737373] hover:text-[#a1a1a1]'
+                ? 'bg-white/[0.1] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]'
+                : 'text-[#737373] hover:bg-white/[0.04] hover:text-[#a1a1a1]'
               }
             `}
           >
-            <span className={projectType === option.type ? 'text-[#c0c0c0]' : 'text-[#525252]'} aria-hidden="true">
+            <span
+              className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
+                projectType === option.type
+                  ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100'
+                  : 'border-white/[0.06] bg-black/20 text-[#525252]'
+              }`}
+              aria-hidden="true"
+            >
               {option.icon}
             </span>
-            {option.name}
+            <span className="min-w-0">
+              <span className="block truncate">{option.name}</span>
+              <span className="block truncate text-[10px] font-normal text-[#6f6f6f]">{option.description}</span>
+            </span>
           </button>
         ))}
       </div>

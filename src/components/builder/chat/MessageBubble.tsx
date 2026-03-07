@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { StreamingMessage } from './StreamingMessage'
 import type { Message } from './types'
@@ -15,7 +16,7 @@ interface MessageBubbleProps {
 /**
  * MessageBubble - Routes to user or agent message style
  */
-export function MessageBubble({ message, isLast, isLoading, onRetry }: MessageBubbleProps) {
+export const MessageBubble = memo(function MessageBubble({ message, isLast, isLoading, onRetry }: MessageBubbleProps) {
   // User message - Right-aligned minimal pill
   if (message.role === 'user') {
     return (
@@ -42,4 +43,4 @@ export function MessageBubble({ message, isLast, isLoading, onRetry }: MessageBu
       onRetry={onRetry}
     />
   )
-}
+})

@@ -30,6 +30,7 @@ import { AUDITOR_SYSTEM_PROMPT } from '@/lib/agents/prompts/auditor'
 import { PLANNER_SYSTEM_PROMPT } from '@/lib/agents/prompts/planner'
 import { STRATEGIST_SYSTEM_PROMPT } from '@/lib/agents/prompts/strategist'
 import { GOD_PROMPT } from '@/lib/agents/prompts/god-prompt'
+import { buildTorbitBuildContract, formatWorkspaceSnapshot, type WorkspaceFileManifest } from '@/lib/agents/build-contract'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -262,17 +263,21 @@ const AGENT_PROMPTS: Record<AgentId, string> = {
 
 function buildSystemPrompt(input: {
   agentId: AgentId
+  userPrompt: string
+  projectType?: 'web' | 'mobile'
   persistedInvariants?: string | null
   tasteProfilePrompt?: string | null
-  fileManifest?: {
-    files: Array<{ path: string; bytes: number }>
-    totalFiles: number
-    truncated?: boolean
-  }
+  fileManifest?: WorkspaceFileManifest
   guardrailPrompt?: string | null
 }): string {
   const basePrompt = AGENT_PROMPTS[input.agentId] || AGENT_PROMPTS.architect
   const parts = [basePrompt]
+
+  parts.push(buildTorbitBuildContract({
+    userPrompt: input.userPrompt,
+    projectType: input.projectType,
+    fileManifest: input.fileManifest,
+  }))
 
   if (input.persistedInvariants) {
     parts.push(input.persistedInvariants)
@@ -283,14 +288,7 @@ function buildSystemPrompt(input: {
   }
 
   if (input.fileManifest && input.fileManifest.files.length > 0) {
-    const fileList = input.fileManifest.files
-      .slice(0, 120)
-      .map((file) => `- ${file.path} (${file.bytes}b)`)
-      .join('\n')
-
-    parts.push(
-      `## CURRENT WORKSPACE SNAPSHOT\n- Total files in current workspace: ${input.fileManifest.totalFiles}\n- Snapshot truncated: ${input.fileManifest.truncated ? 'yes' : 'no'}\n- File list (path + size):\n${fileList}`
-    )
+    parts.push(formatWorkspaceSnapshot(input.fileManifest))
   }
 
   if (input.guardrailPrompt) {
@@ -886,11 +884,10 @@ const authedChatHandler = withAuth(async (req, { user }) => {
 
         emitSupervisor('route_selected', 'routing', 'Route selected for actionable intent.', {
           route: 'world_class_orchestration',
-          supervisor: 'gpt-5.2',
-          analyst: 'gemini-3-pro',
-          builder: 'kimi-k2.5',
-          reviewer: 'claude-opus-4-1',
-          janitor: 'claude-sonnet-4',
+          context: 'workspace-aware execution brief',
+          supervision: 'risk-aware run control',
+          builder: 'implementation worker chain',
+          verification: 'quality gate and cleanup pass',
         })
 
         let guardrailPrompt = ''
@@ -1011,6 +1008,8 @@ const authedChatHandler = withAuth(async (req, { user }) => {
 
         const systemPrompt = buildSystemPrompt({
           agentId: requestedAgentId,
+          userPrompt,
+          projectType: parsedBody.projectType,
           persistedInvariants: parsedBody.persistedInvariants,
           tasteProfilePrompt: parsedBody.tasteProfilePrompt,
           fileManifest: parsedBody.fileManifest,

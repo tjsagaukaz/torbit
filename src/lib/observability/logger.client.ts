@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { getCorrelationId } from './correlation'
-import { appendLog } from './datastore'
+import { getClientCorrelationId } from './clientCorrelation'
 import {
   formatStructuredLog,
   type LogLevel,
@@ -14,35 +13,17 @@ const SENTRY_LEVEL_MAP: Record<LogLevel, 'info' | 'warning' | 'error' | 'debug'>
   debug: 'debug',
 }
 
-function getSafeCorrelationId() {
-  try {
-    return getCorrelationId()
-  } catch {
-    return undefined
-  }
-}
-
 export function log(level: LogLevel, message: string, meta: LogMeta = {}) {
-  const line = formatStructuredLog(level, message, meta, getSafeCorrelationId())
-  // console
+  const line = formatStructuredLog(level, message, meta, getClientCorrelationId())
+
   if (level === 'error') console.error(line)
   else console.log(line)
 
-  // Sentry (optional)
   try {
     if (level === 'error') Sentry.captureException(new Error(message))
     else Sentry.addBreadcrumb({ message, level: SENTRY_LEVEL_MAP[level] })
   } catch {
-    // ignore Sentry failures
-  }
-
-  // datastore (append as JSONL)
-  try {
-    appendLog(line)
-  } catch (e: unknown) {
-    // swallow datastore errors to avoid breaking flows
-    const reason = e instanceof Error ? e.message : String(e)
-    console.error('Failed to write log to datastore:', reason)
+    // Ignore Sentry failures in the browser.
   }
 }
 
@@ -50,8 +31,3 @@ export const info = (msg: string, meta?: LogMeta) => log('info', msg, meta)
 export const warn = (msg: string, meta?: LogMeta) => log('warn', msg, meta)
 export const error = (msg: string, meta?: LogMeta) => log('error', msg, meta)
 export const debug = (msg: string, meta?: LogMeta) => log('debug', msg, meta)
-
-// For testing
-export function _formatLogForTest(level: LogLevel, message: string, meta: LogMeta = {}) {
-  return formatStructuredLog(level, message, meta)
-}

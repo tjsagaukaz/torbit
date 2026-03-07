@@ -11,8 +11,8 @@ export function withCorrelation(handler: NextApiHandler): NextApiHandler {
         info('api.request.start', { path: req.url, method: req.method })
         await handler(req, res)
         info('api.request.end', { status: res.statusCode })
-      } catch (err: any) {
-        error('api.request.error', { message: err.message })
+      } catch (err: unknown) {
+        error('api.request.error', { message: err instanceof Error ? err.message : String(err) })
         throw err
       }
     })

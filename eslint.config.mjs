@@ -35,6 +35,18 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    files: [
+      "src/lib/observability/**/*.{ts,tsx}",
+      "src/lib/billing/**/*.{ts,tsx}",
+      "src/store/**/*.{ts,tsx}",
+      "src/app/api/billing/**/*.{ts,tsx}",
+    ],
+    ignores: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.test.tsx", "src/vitest.d.ts"],
     rules: {
       "@next/next/no-assign-module-variable": "off",
