@@ -20,6 +20,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { SubscriptionTier } from '@/lib/billing/types'
 import { TIER_CONFIG } from '@/lib/billing/types'
 import { isDuplicateStripeCreditError } from '@/lib/billing/idempotency'
+import { stripeWebhookRateLimiter } from '@/lib/rate-limit'
 
 // Use service role client for webhook (bypasses RLS)
 function getAdminClient() {
@@ -174,7 +175,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // 3. Handle the event
+    // 3. Per-customer rate limit — guards against abuse if the webhook secret leaks.
+    const customerId = extractCustomerId(event)
+    if (customerId) {
+      const rl = await stripeWebhookRateLimiter.check(`customer:${customerId}`)
+      if (!rl.success) {
+        console.warn('[webhook] rate limit hit for customer', customerId.slice(0, 12))
+        return NextResponse.json({ received: true, rateLimited: true })
+      }
+    }
+
+    // 4. Handle the event
     const supabase = getAdminClient()
     const reservation = await reserveWebhookEvent(supabase, event)
     if (reservation === 'skip') {
@@ -210,7 +221,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 p_metadata: { fuel_pack_id: metadata.fuel_pack_id },
               }, `payment_intent:${session.payment_intent as string}`)
 
-              console.log(`Added ${fuelAmount} fuel to user ${userId}`)
+              console.log(`Added ${fuelAmount} fuel to user ${userId.slice(0, 8)}...`)
             }
           }
           // Subscription checkout is handled by customer.subscription.created
@@ -290,7 +301,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             })
             .eq('user_id', customerRecord.user_id)
 
-          console.log(`Updated subscription for user ${customerRecord.user_id} to ${tier}`)
+          console.log(`Updated subscription for user ${customerRecord.user_id.slice(0, 8)}... to ${tier}`)
           break
         }
 
@@ -320,7 +331,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             })
             .eq('user_id', customerRecord.user_id)
 
-          console.log(`Subscription canceled for user ${customerRecord.user_id}, downgraded to free`)
+          console.log(`Subscription canceled for user ${customerRecord.user_id.slice(0, 8)}..., downgraded to free`)
           break
         }
 
@@ -364,7 +375,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             p_metadata: { tier, period: invoice.period_end },
           }, `invoice:${invoice.id}`)
 
-          console.log(`Monthly refill: ${fuelAmount} fuel for user ${customerRecord.user_id}`)
+          console.log(`Monthly refill: ${fuelAmount} fuel for user ${customerRecord.user_id.slice(0, 8)}...`)
           break
         }
 
@@ -392,7 +403,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             .update({ status: 'past_due' })
             .eq('user_id', customerRecord.user_id)
 
-          console.log(`Payment failed for user ${customerRecord.user_id}`)
+          console.log(`Payment failed for user ${customerRecord.user_id.slice(0, 8)}...`)
           // TODO: Send email notification to user
           break
         }
@@ -418,6 +429,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 // Helper functions
+
+function extractCustomerId(event: Stripe.Event): string | null {
+  const obj = event.data.object as unknown as Record<string, unknown>
+  if (typeof obj.customer === 'string') return obj.customer
+  return null
+}
 
 async function handleSubscriptionCreated(
   supabase: ReturnType<typeof getAdminClient>,
@@ -465,7 +482,7 @@ async function handleSubscriptionCreated(
     p_metadata: { tier, subscription_id: subscription.id },
   }, `subscription:${subscription.id}`)
 
-  console.log(`Created ${tier} subscription for user ${userId} with ${fuelAllowance} fuel`)
+  console.log(`Created ${tier} subscription for user ${userId.slice(0, 8)}... with ${fuelAllowance} fuel`)
 }
 
 function mapStripeStatus(status: Stripe.Subscription.Status): string {

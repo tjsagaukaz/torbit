@@ -7,7 +7,7 @@ import { withAuth } from '@/lib/middleware/auth'
 export const runtime = 'nodejs'
 
 const SignBundleRequestSchema = z.object({
-  projectId: z.string().min(1),
+  projectId: z.string().uuid(),
   action: z.string().min(1),
   artifactCount: z.number().int().min(0).default(0),
   bundleHash: z.string().optional(),
@@ -90,7 +90,7 @@ export const POST = withAuth(async (request, { user }) => {
   } catch (error) {
     console.error('sign-bundle error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to sign bundle.' },
+      { error: 'Failed to sign bundle.' },
       { status: 500 }
     )
   }

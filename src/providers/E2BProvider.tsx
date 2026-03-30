@@ -355,7 +355,7 @@ export function injectPreviewBridgeIntoNextLayout(layoutContent: string): string
       {/* ${PREVIEW_BRIDGE_MARKER}: enables iframe-to-preview console diagnostics */}
       <script
         dangerouslySetInnerHTML={{
-          __html: "${PREVIEW_BRIDGE_INLINE_SCRIPT}",
+          __html: ${JSON.stringify(PREVIEW_BRIDGE_INLINE_SCRIPT)},
         }}
       />`
 

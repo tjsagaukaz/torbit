@@ -31,7 +31,7 @@ const persistedSandboxOwners = new Map<string, string>()
 
 let persistedOwnersLoaded = false
 
-const HIGH_THROUGHPUT_ACTIONS = new Set(['writeFile', 'readFile', 'makeDir', 'getHost'])
+const HIGH_THROUGHPUT_ACTIONS = new Set(['writeFile', 'readFile', 'makeDir', 'getHost', 'listDir', 'stat'])
 
 function resolveRateLimiterForAction(action: string) {
   if (HIGH_THROUGHPUT_ACTIONS.has(action)) {
@@ -100,8 +100,10 @@ function persistSandboxOwners(): void {
 
     const serialized = Object.fromEntries(persistedSandboxOwners.entries())
     const tempPath = `${filePath}.tmp`
-    fs.writeFileSync(tempPath, `${JSON.stringify(serialized, null, 2)}\n`, 'utf8')
+    fs.writeFileSync(tempPath, `${JSON.stringify(serialized, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 })
     fs.renameSync(tempPath, filePath)
+    // Ensure the live file is also restricted in case it pre-dated this code.
+    try { fs.chmodSync(filePath, 0o600) } catch { /* non-fatal */ }
   } catch (error) {
     console.warn('[E2B] Failed to persist sandbox ownership map:', error)
   }
@@ -357,7 +359,7 @@ export async function POST(request: NextRequest) {
             const verifyResult = await sandbox.commands.run('/usr/local/bin/node --version', { timeoutMs: 5000 })
             if (verifyResult.exitCode === 0) {
               nodeInstalledSandboxes.add(sandbox.sandboxId)
-              console.log('✅ Node.js installed:', verifyResult.stdout.trim())
+              console.log('✅ Node.js installed:', verifyResult.stdout.slice(0, 64).trim())
             } else {
               throw new Error('Node verification failed')
             }
@@ -459,7 +461,7 @@ export async function POST(request: NextRequest) {
 
     console.error('E2B API error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Sandbox operation failed. Please try again.', code: 'E2B_INTERNAL_ERROR' },
       { status: 500 }
     )
   }

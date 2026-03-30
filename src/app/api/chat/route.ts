@@ -42,7 +42,7 @@ const ChatRequestSchema = z.object({
     content: z.string(),
   })).min(1),
   agentId: z.string().optional(),
-  projectId: z.string().max(200).optional(),
+  projectId: z.string().uuid().optional(),
   projectType: z.enum(['web', 'mobile']).optional(),
   capabilities: z.record(z.string(), z.unknown()).nullable().optional(),
   persistedInvariants: z.string().nullable().optional(),
@@ -1172,25 +1172,30 @@ const authedChatHandler = withAuth(async (req, { user }) => {
         })
         close()
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to process request.'
+        const rawMessage = error instanceof Error ? error.message : 'Failed to process request.'
+        const isTransient = isTransientModelError(rawMessage)
+        // Only surface transient (infra) errors to clients; scrub internal details otherwise.
+        const clientMessage = isTransient
+          ? 'The AI service is temporarily unavailable. Please try again.'
+          : 'An unexpected error occurred. Please try again.'
         sendChunk({
           type: 'error',
           error: {
             type: 'unknown',
-            message,
-            retryable: isTransientModelError(message),
+            message: clientMessage,
+            retryable: isTransient,
           },
         })
 
         emitSupervisor('run_completed', 'run', 'Run aborted due to unexpected error.', {
           success: false,
-          error: message,
+          error: rawMessage,
         })
 
         finalizeMetrics({
           success: false,
           outcome: 'aborted',
-          failureType: isTransientModelError(message) ? 'transient' : 'unknown',
+          failureType: isTransient ? 'transient' : 'unknown',
         })
         close()
       }

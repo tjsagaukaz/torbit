@@ -9,7 +9,7 @@ import { makeApiErrorEnvelope } from '@/lib/api/error-envelope'
 export const runtime = 'nodejs'
 
 const CreateBackgroundRunSchema = z.object({
-  projectId: z.string().min(1),
+  projectId: z.string().uuid(),
   runType: z.string().min(1),
   input: z.record(z.string(), z.unknown()).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),

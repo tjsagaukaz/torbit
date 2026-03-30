@@ -226,6 +226,16 @@ export const e2bSyncRateLimiter = new RateLimiter({
   refillInterval: 1000,
 })
 
+// Per-Stripe-customer limiter for webhook events. Prevents billing fraud if the
+// webhook secret is ever leaked — an attacker cannot spam fuel credits beyond this
+// threshold even with a valid signature.
+export const stripeWebhookRateLimiter = new RateLimiter({
+  name: 'stripe-webhook',
+  maxTokens: 20,
+  refillRate: 5,
+  refillInterval: 60_000, // 20 events per customer per minute
+})
+
 function normalizeClientIp(value: string): string | null {
   const trimmed = value.trim()
   if (!trimmed) return null

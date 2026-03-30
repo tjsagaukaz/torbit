@@ -70,8 +70,9 @@ export const POST = withAuth(async (request, { user }) => {
 
       const priceId = getSubscriptionPriceId(tier as 'pro' | 'team')
       if (!priceId) {
+        console.error(`[checkout] Price ID not configured for subscription tier: ${tier}`)
         return NextResponse.json(
-          { success: false, error: `Price ID not configured for tier: ${tier}` },
+          { success: false, error: 'Checkout is not available at this time.' },
           { status: 500 }
         )
       }
@@ -126,8 +127,9 @@ export const POST = withAuth(async (request, { user }) => {
 
       const priceId = getFuelPackPriceId(fuelPackId)
       if (!priceId) {
+        console.error(`[checkout] Price ID not configured for fuel pack: ${fuelPackId}`)
         return NextResponse.json(
-          { success: false, error: `Price ID not configured for fuel pack: ${fuelPackId}` },
+          { success: false, error: 'Checkout is not available at this time.' },
           { status: 500 }
         )
       }
@@ -174,10 +176,7 @@ export const POST = withAuth(async (request, { user }) => {
   } catch (error) {
     console.error('Checkout error:', error)
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Checkout failed'
-      },
+      { success: false, error: 'Checkout failed. Please try again.' },
       { status: 500 }
     )
   }

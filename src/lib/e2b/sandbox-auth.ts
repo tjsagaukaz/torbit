@@ -33,11 +33,12 @@ function safeEqualSignature(a: string, b: string): boolean {
 }
 
 export function getSandboxAccessTokenSecret(env: NodeJS.ProcessEnv = process.env): string | null {
+  // Only allow dedicated signing secrets. Never fall back to database admin keys
+  // (SUPABASE_SERVICE_ROLE_KEY) or API keys (E2B_API_KEY) — a leaked sandbox token
+  // would otherwise grant unrelated elevated access.
   return (
     env.TORBIT_SANDBOX_SIGNING_SECRET ||
     env.NEXTAUTH_SECRET ||
-    env.SUPABASE_SERVICE_ROLE_KEY ||
-    env.E2B_API_KEY ||
     null
   )
 }
